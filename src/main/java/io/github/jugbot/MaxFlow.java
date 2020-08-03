@@ -99,6 +99,12 @@ public class MaxFlow {
       }
       if (isBottleNeck) result.add(u);
     }
+    // Handle floating groups
+    for (Edge e : graph[src]) {
+      if (e.f == 0 && e.cap != 0) {
+        result.add(e.t);
+      }
+    }
     return result;
   }
 }

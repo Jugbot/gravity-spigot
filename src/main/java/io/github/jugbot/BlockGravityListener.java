@@ -8,6 +8,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 
 public class BlockGravityListener implements Listener {
+  // TODO: Changeto pillars of blocks not single blocks for better handling sand
   @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
   void onBlockGravity(BlockGravityEvent event) {
     System.out.println("Block Gravity");
@@ -17,10 +18,11 @@ public class BlockGravityListener implements Listener {
     // If block can fall, then make it fall
     // Otherwise just break the block
     if (below != null && below.isPassable()) {
-      block.getWorld().spawnFallingBlock(location, block.getBlockData());
+      block.getWorld().spawnFallingBlock(location.add(0.5, 0.5, 0.5), block.getBlockData());
       block.setType(Material.AIR);
     } else {
       block.breakNaturally();
     }
+    
   }
 }

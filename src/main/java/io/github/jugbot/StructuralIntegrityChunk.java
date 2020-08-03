@@ -1,15 +1,19 @@
 package io.github.jugbot;
 
 import java.util.List;
+import java.util.concurrent.Callable;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
+import org.bukkit.ChunkSnapshot;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Directional;
 
-public class StructuralIntegrityChunk extends NotificationThread<Block[]> {
-  Chunk chunk;
+public class StructuralIntegrityChunk implements Callable<Block[]> {
+  ChunkSnapshot chunk;
+  Chunk originalChunk;
   List<MaxFlow.Edge>[] graph;
   int src;
   int dest;
@@ -35,17 +39,18 @@ public class StructuralIntegrityChunk extends NotificationThread<Block[]> {
     }
   }
 
-  StructuralIntegrityChunk(Chunk chunk) {
+  StructuralIntegrityChunk(Chunk liveChunk) {
     int nodeCount = 16*16*256+2;
     src = nodeCount - 1;
     dest = nodeCount - 2;
     graph = MaxFlow.createGraph(nodeCount);
-    this.chunk = chunk;
+    chunk = liveChunk.getChunkSnapshot();
+    originalChunk = liveChunk;
     // Translate chunk to graph 
     for (int x = 0; x < 16; x++) {
       for (int z = 0; z < 16; z++) {
         for (int y = 0; y < 256; y++) {
-          BlockData block = chunk.getChunkSnapshot().getBlockData(x, y, z);
+          BlockData block = chunk.getBlockData(x, y, z);
           int[] data = getStructuralData(block);
           if (data == null) continue;
           XYZ from = new XYZ(x,y,z);
@@ -84,7 +89,7 @@ public class StructuralIntegrityChunk extends NotificationThread<Block[]> {
   }
 
   @Override
-  public Block[] doWork() {
+  public Block[] call() {
     // Run Max Flow and get nodes to remove
     MaxFlow.maxFlow(graph, src, dest);
     List<Integer> offending = MaxFlow.getOffendingVertices(graph, src, dest);
@@ -92,9 +97,31 @@ public class StructuralIntegrityChunk extends NotificationThread<Block[]> {
     Block[] blocks = new Block[offending.size()];
     for (int i = 0; i < offending.size(); i++) {
       XYZ chunkLocation = new XYZ(offending.get(i));
-      blocks[i] = (chunk.getBlock(chunkLocation.x, chunkLocation.y, chunkLocation.z));
+      blocks[i] = (originalChunk.getBlock(chunkLocation.x, chunkLocation.y, chunkLocation.z));
     }
     return blocks;
+  }
+
+  public interface Callback<T> {
+    void done(T result);
+  }
+
+  public static void getBrokenBlocks(final StructuralIntegrityChunk chunk, final Callback<Block[]> callback) {
+    // Run outside of the tick loop
+    Bukkit.getScheduler().runTaskAsynchronously(App.instance, new Runnable() {
+        @Override
+        public void run() {
+            final Block[] result = chunk.call();
+            // go back to the tick loop
+            Bukkit.getScheduler().runTask(App.instance, new Runnable() {
+                @Override
+                public void run() {
+                    // call the callback with the result
+                    callback.done(result);
+                }
+            });
+        }
+    });
   }
 
   private static final int MASS = 0;
@@ -116,51 +143,8 @@ public class StructuralIntegrityChunk extends NotificationThread<Block[]> {
     switch (material) {
       case OAK_PLANKS:
         return new int[]{1, 5, 2, 3, 3, 3, 3};
-      case OAK_LOG:
-        // Example directional block
-        Directional direction = (Directional) block;
-        switch (direction.getFacing()) {
-          case DOWN:
-            break;
-          case EAST:
-            break;
-          case EAST_NORTH_EAST:
-            break;
-          case EAST_SOUTH_EAST:
-            break;
-          case NORTH:
-            break;
-          case NORTH_EAST:
-            break;
-          case NORTH_NORTH_EAST:
-            break;
-          case NORTH_NORTH_WEST:
-            break;
-          case NORTH_WEST:
-            break;
-          case SELF:
-            break;
-          case SOUTH:
-            break;
-          case SOUTH_EAST:
-            break;
-          case SOUTH_SOUTH_EAST:
-            break;
-          case SOUTH_SOUTH_WEST:
-            break;
-          case SOUTH_WEST:
-            break;
-          case UP:
-            break;
-          case WEST:
-            break;
-          case WEST_NORTH_WEST:
-            break;
-          case WEST_SOUTH_WEST:
-            break;
-          default:
-            break;
-        }
+      case STONE:
+        return new int[]{1, 128+64, 4, 4, 4, 4, 4};
       default:
         // Default mass 1, Infinite integrity
         return new int[] {
