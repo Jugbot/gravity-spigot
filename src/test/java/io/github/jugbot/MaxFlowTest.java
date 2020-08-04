@@ -14,7 +14,8 @@ public class MaxFlowTest {
     MaxFlow.addEdge(graph, 0, 1, 3);
     MaxFlow.addEdge(graph, 0, 2, 2);
     MaxFlow.addEdge(graph, 1, 2, 2);
-    assertTrue(4 == MaxFlow.maxFlow(graph, 0, 2));
+    // int[] dist = new int[graph.length]; 
+    assertTrue(4 == MaxFlow.maxFlow(graph, new int[graph.length], 0, 2));
   }
   
 }

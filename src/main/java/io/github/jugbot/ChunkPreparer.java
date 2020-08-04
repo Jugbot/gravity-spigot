@@ -20,7 +20,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.scheduler.BukkitRunnable;
 
-public class ChunkPreparer implements FutureCallback<Block[]>, Listener {
+public class ChunkPreparer implements Listener {
   LinkedHashSet<Chunk> chunkUpdateQueue = new LinkedHashSet<Chunk>();
   Set<Chunk> inProgress = new HashSet<Chunk>();
   ListeningExecutorService pool;
@@ -46,9 +46,12 @@ public class ChunkPreparer implements FutureCallback<Block[]>, Listener {
         @Override
         public void done(Block[] blocks) {
           inProgress.remove(chunk);
-          for (Block block : blocks) {
-            Bukkit.getPluginManager().callEvent(new BlockGravityEvent(block));
-          }
+          Bukkit.getPluginManager().callEvent(new BlockGravityEvent(blocks));
+          System.out.println("Thread Finished");
+          System.out.println(blocks.length);
+          // for (Block block : blocks) {
+          //   Bukkit.getPluginManager().callEvent(new BlockGravityEvent(block));
+          // }
         }
         
       });
@@ -57,24 +60,5 @@ public class ChunkPreparer implements FutureCallback<Block[]>, Listener {
     inProgress.addAll(shouldUpdate);
   }
 
-  @Override
-  public void onSuccess(Block[] blocks) {
-    System.out.println("Thread Completed");
-    // Mark chunk as finished
-    // inProgress.remove(((StructuralIntegrityChunk) thread).chunk);
-    for (Block block : blocks) {
-      Bukkit.getPluginManager().callEvent(new BlockGravityEvent(block));
-      // if (block.equals(block.getChunk().getWorld().getBlockAt(block.getLocation()))) {
-      // 
-      // } else {
-      //   System.out.println("Block update invalidated [too late]");
-      // }
-    }
-  }
-
-  @Override
-  public void onFailure(Throwable t) {
-    System.out.println("Thread Failed");
-    System.err.println(t.toString());
-  }
+  
 }

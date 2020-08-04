@@ -15,6 +15,7 @@ public class StructuralIntegrityChunk implements Callable<Block[]> {
   ChunkSnapshot chunk;
   Chunk originalChunk;
   List<MaxFlow.Edge>[] graph;
+  int[] dist;
   int src;
   int dest;
 
@@ -44,6 +45,7 @@ public class StructuralIntegrityChunk implements Callable<Block[]> {
     src = nodeCount - 1;
     dest = nodeCount - 2;
     graph = MaxFlow.createGraph(nodeCount);
+    dist = new int[nodeCount];
     chunk = liveChunk.getChunkSnapshot();
     originalChunk = liveChunk;
     // Translate chunk to graph 
@@ -91,8 +93,8 @@ public class StructuralIntegrityChunk implements Callable<Block[]> {
   @Override
   public Block[] call() {
     // Run Max Flow and get nodes to remove
-    MaxFlow.maxFlow(graph, src, dest);
-    List<Integer> offending = MaxFlow.getOffendingVertices(graph, src, dest);
+    MaxFlow.maxFlow(graph, dist, src, dest);
+    List<Integer> offending = MaxFlow.getOffendingVertices(graph, dist, src, dest);
     // Translate vertices to Blocks w/ Locations
     Block[] blocks = new Block[offending.size()];
     for (int i = 0; i < offending.size(); i++) {
@@ -142,9 +144,9 @@ public class StructuralIntegrityChunk implements Callable<Block[]> {
     if (!material.isSolid()) return null;
     switch (material) {
       case OAK_PLANKS:
-        return new int[]{1, 5, 2, 3, 3, 3, 3};
+        return new int[]{1, 2, 6, 4, 4, 4, 4};
       case STONE:
-        return new int[]{1, 128+64, 4, 4, 4, 4, 4};
+        return new int[]{1, 3, 128+64, 4, 4, 4, 4};
       default:
         // Default mass 1, Infinite integrity
         return new int[] {

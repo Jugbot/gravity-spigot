@@ -1,6 +1,7 @@
 package io.github.jugbot;
 
 import org.bukkit.Bukkit;
+import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -22,10 +23,12 @@ public class BlockEventListeners implements Listener {
     Bukkit.getPluginManager().callEvent(new BlockChangeEvent(event.getBlock()));
   }
 
-  @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-  void onBlockGravity(BlockGravityEvent event) {
-    // if (event.getBlock() == null) return;
-    System.out.println("Block Gravity Event");
-    Bukkit.getPluginManager().callEvent(new BlockChangeEvent(event.getBlock()));
-  }
+  // @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+  // void onBlockGravity(BlockGravityEvent event) {
+  //   // if (event.getBlock() == null) return;
+  //   System.out.println("Block Gravity Event");
+  //   for (Block block : event.getBlocks()) {
+  //     Bukkit.getPluginManager().callEvent(new BlockChangeEvent(block));
+  //   }
+  // }
 }

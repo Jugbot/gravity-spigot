@@ -61,9 +61,9 @@ public class MaxFlow {
     return 0;
   }
 
-  public static int maxFlow(List<Edge>[] graph, int src, int dest) {
+  public static int maxFlow(List<Edge>[] graph, int[] dist, int src, int dest) {
     int flow = 0;
-    int[] dist = new int[graph.length];
+    // int[] dist = new int[graph.length];
     while (dinicBfs(graph, src, dest, dist)) {
       int[] ptr = new int[graph.length];
       while (true) {
@@ -76,7 +76,20 @@ public class MaxFlow {
     return flow;
   }
 
-  public static List<Integer> getOffendingVertices(List<Edge>[] graph, int src, int dest) {
+  public static List<Integer> getOffendingVertices(List<Edge>[] graph, int[] dist, int src, int dest) {
+    List<Integer> result = new ArrayList<>();
+    for (Edge e : graph[src]) {
+      int u = e.t;
+      int level = dist[u];
+      if (level > 0 && level != dest) {
+        result.add(u);
+      }
+    }
+    return result;
+  }
+
+
+  public static List<Integer> getOffendingVerticesOld(List<Edge>[] graph, int src, int dest) {
     List<Integer> result = new ArrayList<>();
     int[] dist = new int[graph.length];
     Arrays.fill(dist, -1);
@@ -93,6 +106,7 @@ public class MaxFlow {
             dist[e.t] = dist[u] + 1;
             Q[sizeQ++] = e.t;
           } else if (e.cap > 0 && u != src && u != dest) {
+            // TODO get all blocks that are disconnected
             isBottleNeck = true;
           }
         } 
