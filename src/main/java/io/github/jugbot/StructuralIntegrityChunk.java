@@ -41,53 +41,57 @@ public class StructuralIntegrityChunk implements Callable<Block[]> {
   }
 
   StructuralIntegrityChunk(Chunk liveChunk) {
-    int nodeCount = 16*16*256+2;
+    int nodeCount = 16 * 16 * 256 + 2;
     src = nodeCount - 1;
     dest = nodeCount - 2;
     graph = MaxFlow.createGraph(nodeCount);
     dist = new int[nodeCount];
     chunk = liveChunk.getChunkSnapshot();
     originalChunk = liveChunk;
-    // Translate chunk to graph 
-    for (int x = 0; x < 16; x++) {
-      for (int z = 0; z < 16; z++) {
-        for (int y = 0; y < 256; y++) {
+    // Translate chunk to graph
+    // Note the order of blocks is incremental on the y-axis
+    // for some handy computation later
+    for (int y = 0; y < 256; y++) {
+      for (int x = 0; x < 16; x++) {
+        for (int z = 0; z < 16; z++) {
           BlockData block = chunk.getBlockData(x, y, z);
           int[] data = getStructuralData(block);
-          if (data == null) continue;
-          XYZ from = new XYZ(x,y,z);
+          if (data == null)
+            continue;
+          XYZ from = new XYZ(x, y, z);
           if (y != 0) {
-            XYZ to = new XYZ(x, y-1, z);
+            XYZ to = new XYZ(x, y - 1, z);
             MaxFlow.addEdge(graph, from.index, to.index, data[DOWN]);
           }
           if (y != 255) {
-            XYZ to = new XYZ(x, y+1, z);
+            XYZ to = new XYZ(x, y + 1, z);
             MaxFlow.addEdge(graph, from.index, to.index, data[UP]);
           }
           if (x != 0) {
-            XYZ to = new XYZ(x-1, y ,z);
+            XYZ to = new XYZ(x - 1, y, z);
             MaxFlow.addEdge(graph, from.index, to.index, data[WEST]);
           }
           if (x != 15) {
-            XYZ to = new XYZ(x+1, y ,z);
+            XYZ to = new XYZ(x + 1, y, z);
             MaxFlow.addEdge(graph, from.index, to.index, data[EAST]);
           }
           if (z != 0) {
-            XYZ to = new XYZ(x, y ,z-1);
+            XYZ to = new XYZ(x, y, z - 1);
             MaxFlow.addEdge(graph, from.index, to.index, data[NORTH]);
           }
           if (z != 15) {
-            XYZ to = new XYZ(x, y ,z+1);
+            XYZ to = new XYZ(x, y, z + 1);
             MaxFlow.addEdge(graph, from.index, to.index, data[SOUTH]);
           }
+          // Add edge from source to block with capacity of block weight
           MaxFlow.addEdge(graph, src, from.index, data[MASS]);
+          // Blocks on the bottom row will connect to the sink
           if (y == 0) {
             MaxFlow.addEdge(graph, from.index, dest, Integer.MAX_VALUE);
           }
         }
       }
     }
-    
   }
 
   @Override
@@ -111,18 +115,18 @@ public class StructuralIntegrityChunk implements Callable<Block[]> {
   public static void getBrokenBlocks(final StructuralIntegrityChunk chunk, final Callback<Block[]> callback) {
     // Run outside of the tick loop
     Bukkit.getScheduler().runTaskAsynchronously(App.instance, new Runnable() {
-        @Override
-        public void run() {
-            final Block[] result = chunk.call();
-            // go back to the tick loop
-            Bukkit.getScheduler().runTask(App.instance, new Runnable() {
-                @Override
-                public void run() {
-                    // call the callback with the result
-                    callback.done(result);
-                }
-            });
-        }
+      @Override
+      public void run() {
+        final Block[] result = chunk.call();
+        // go back to the tick loop
+        Bukkit.getScheduler().runTask(App.instance, new Runnable() {
+          @Override
+          public void run() {
+            // call the callback with the result
+            callback.done(result);
+          }
+        });
+      }
     });
   }
 
@@ -141,23 +145,12 @@ public class StructuralIntegrityChunk implements Callable<Block[]> {
    */
   static int[] getStructuralData(BlockData block) {
     Material material = block.getMaterial();
-    if (!material.isSolid()) return null;
-    switch (material) {
-      case OAK_PLANKS:
-        return new int[]{1, 2, 6, 4, 4, 4, 4};
-      case STONE:
-        return new int[]{1, 3, 128+64, 4, 4, 4, 4};
-      default:
-        // Default mass 1, Infinite integrity
-        return new int[] {
-          1,
-          Integer.MAX_VALUE,
-          Integer.MAX_VALUE,
-          Integer.MAX_VALUE,
-          Integer.MAX_VALUE,
-          Integer.MAX_VALUE,
-          Integer.MAX_VALUE,
-        };
-    }
+    if (!material.isSolid())
+      return null;
+    int[] data = Config.Instance().getBlockData().getData(material);
+    if (data == null)
+      return new int[] { 1, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE,
+          Integer.MAX_VALUE, Integer.MAX_VALUE };
+    return data;
   }
 }
