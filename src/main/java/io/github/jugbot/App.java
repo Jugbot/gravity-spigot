@@ -9,11 +9,17 @@ import org.bukkit.plugin.java.JavaPlugin;
  */
 public class App extends JavaPlugin
 {
-    static App instance;
+    private static App instance;
+
+    public static App Instance() {
+        if (instance == null) {
+            instance = App.getPlugin(App.class);
+        }
+        return instance;
+    }
 
     @Override
     public void onEnable() {
-        instance = this;
         ConfigurationSerialization.registerClass(BlockData.class);
         Config.Instance();
         getServer().getPluginManager().registerEvents(new BlockEventListeners(), this);

@@ -17,10 +17,6 @@ public class BlockData implements ConfigurationSerializable {
     blocks = new HashMap<Material, int[]>();
   }
 
-  // BlockData(LinkedHashMap<String, Object> serialized) {
-  //   this((Map<String, Object>)serialized);
-  // }
-
   BlockData(Map<String, Object> serialized) {
     System.out.println("Initializing blockmap...");
     blocks = new HashMap<Material, int[]>();

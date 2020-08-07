@@ -114,12 +114,12 @@ public class StructuralIntegrityChunk implements Callable<Block[]> {
 
   public static void getBrokenBlocks(final StructuralIntegrityChunk chunk, final Callback<Block[]> callback) {
     // Run outside of the tick loop
-    Bukkit.getScheduler().runTaskAsynchronously(App.instance, new Runnable() {
+    Bukkit.getScheduler().runTaskAsynchronously(App.Instance(), new Runnable() {
       @Override
       public void run() {
         final Block[] result = chunk.call();
         // go back to the tick loop
-        Bukkit.getScheduler().runTask(App.instance, new Runnable() {
+        Bukkit.getScheduler().runTask(App.Instance(), new Runnable() {
           @Override
           public void run() {
             // call the callback with the result
