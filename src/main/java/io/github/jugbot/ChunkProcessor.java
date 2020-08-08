@@ -20,45 +20,47 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.scheduler.BukkitRunnable;
 
-public class ChunkPreparer implements Listener {
+public class ChunkProcessor {
+  private static ChunkProcessor instance;
   LinkedHashSet<Chunk> chunkUpdateQueue = new LinkedHashSet<Chunk>();
   Set<Chunk> inProgress = new HashSet<Chunk>();
-  ListeningExecutorService pool;
 
-  ChunkPreparer() {
-    // Currently spawns a max of one thread per chunk
-    // Can decrease by setting explicit pool size
-    pool = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
+  public static ChunkProcessor Instance() {
+    if (instance == null)
+      instance = new ChunkProcessor();
+    return instance;
   }
 
-  @EventHandler
-  void onBlockChange(BlockChangeEvent event) {
-    chunkUpdateQueue.add(event.getBlock().getChunk());
+  public void loadIntegrityChunk(Chunk chunk) {
+    chunkUpdateQueue.add(chunk);
+    processChunks();
+  }
+
+  private void processChunks() {
+    // Make set of dirty chunks that are not being processed
     Set<Chunk> shouldUpdate = new HashSet<Chunk>(chunkUpdateQueue);
     shouldUpdate.removeAll(inProgress);
+    // Remove chunks to operate from update queue
     chunkUpdateQueue.removeAll(shouldUpdate);
-    for (Chunk chunk : shouldUpdate) {
-      StructuralIntegrityChunk maths = new StructuralIntegrityChunk(chunk);
-      // ListenableFuture<Block[]> future = pool.submit(maths);
-      // Futures.addCallback(future, this, pool);
-      StructuralIntegrityChunk.getBrokenBlocks(maths, new StructuralIntegrityChunk.Callback<Block[]>(){
+    // Mark chunks as in progress
+    inProgress.addAll(shouldUpdate);
 
+    for (Chunk chunk : shouldUpdate) {
+      // TODO store data
+      IntegrityChunk maths = new IntegrityChunk(chunk);
+      // Thread & Callback
+      IntegrityChunk.getBrokenBlocks(maths, new IntegrityChunk.Callback<Block[]>(){
         @Override
         public void done(Block[] blocks) {
+          // Mark chunk as free
           inProgress.remove(chunk);
+          // Call gravity event on blocks in chunk
           Bukkit.getPluginManager().callEvent(new BlockGravityEvent(blocks));
           System.out.println("Thread Finished");
-          System.out.println(blocks.length);
-          // for (Block block : blocks) {
-          //   Bukkit.getPluginManager().callEvent(new BlockGravityEvent(block));
-          // }
+          System.out.println("Blocks to fall: " + blocks.length);
         }
-        
       });
       System.out.println("Thread Started");
     }
-    inProgress.addAll(shouldUpdate);
   }
-
-  
 }

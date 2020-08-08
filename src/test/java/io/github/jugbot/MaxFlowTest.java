@@ -6,6 +6,8 @@ import java.util.List;
 
 import org.junit.Test;
 
+import io.github.jugbot.util.MaxFlow;
+
 public class MaxFlowTest {
   
   @Test

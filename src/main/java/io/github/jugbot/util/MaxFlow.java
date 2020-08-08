@@ -1,10 +1,10 @@
-package io.github.jugbot;
+package io.github.jugbot.util;
 
 import java.util.*;
 
 public class MaxFlow {
 
-  static class Edge {
+  public static class Edge {
     int t, rev, cap, f;
 
     public Edge(int t, int rev, int cap) {

@@ -11,7 +11,9 @@ import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Directional;
 
-public class StructuralIntegrityChunk implements Callable<Block[]> {
+import io.github.jugbot.util.MaxFlow;
+
+public class IntegrityChunk {
   ChunkSnapshot chunk;
   Chunk originalChunk;
   List<MaxFlow.Edge>[] graph;
@@ -40,7 +42,7 @@ public class StructuralIntegrityChunk implements Callable<Block[]> {
     }
   }
 
-  StructuralIntegrityChunk(Chunk liveChunk) {
+  IntegrityChunk(Chunk liveChunk) {
     int nodeCount = 16 * 16 * 256 + 2;
     src = nodeCount - 1;
     dest = nodeCount - 2;
@@ -94,10 +96,14 @@ public class StructuralIntegrityChunk implements Callable<Block[]> {
     }
   }
 
-  @Override
+  void updateChunkIntegrity(Block[] blocks) { }
+  void updateChunkIntegrity() {
+    MaxFlow.maxFlow(graph, dist, src, dest);
+  }
+
   public Block[] call() {
     // Run Max Flow and get nodes to remove
-    MaxFlow.maxFlow(graph, dist, src, dest);
+    updateChunkIntegrity();
     List<Integer> offending = MaxFlow.getOffendingVertices(graph, dist, src, dest);
     // Translate vertices to Blocks w/ Locations
     Block[] blocks = new Block[offending.size()];
@@ -112,7 +118,7 @@ public class StructuralIntegrityChunk implements Callable<Block[]> {
     void done(T result);
   }
 
-  public static void getBrokenBlocks(final StructuralIntegrityChunk chunk, final Callback<Block[]> callback) {
+  public static void getBrokenBlocks(final IntegrityChunk chunk, final Callback<Block[]> callback) {
     // Run outside of the tick loop
     Bukkit.getScheduler().runTaskAsynchronously(App.Instance(), new Runnable() {
       @Override
