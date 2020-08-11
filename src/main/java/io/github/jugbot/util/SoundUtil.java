@@ -16,7 +16,8 @@ public class SoundUtil {
   public Sound getSound(org.bukkit.block.Block block) {
     try {
       WorldServer nmsWorld = ((CraftWorld) block.getWorld()).getHandle();
-      Block nmsBlock = nmsWorld.getType(new BlockPosition(block.getX(), block.getY(), block.getZ())).getBlock();
+      Block nmsBlock =
+          nmsWorld.getType(new BlockPosition(block.getX(), block.getY(), block.getZ())).getBlock();
       SoundEffectType soundEffectType = nmsBlock.getStepSound(nmsBlock.getBlockData());
 
       Field breakSound = SoundEffectType.class.getDeclaredField("y");
@@ -29,7 +30,7 @@ public class SoundUtil {
 
       return Sound.valueOf(nmsString.getKey().replace(".", "_").toUpperCase());
     } catch (IllegalAccessException | NoSuchFieldException ex) {
-        ex.printStackTrace();
+      ex.printStackTrace();
     }
     return null;
   }

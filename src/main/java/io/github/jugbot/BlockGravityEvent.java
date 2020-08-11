@@ -5,7 +5,6 @@ import javax.annotation.Nonnull;
 import org.bukkit.block.Block;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
-import org.bukkit.event.block.BlockEvent;
 
 public class BlockGravityEvent extends Event {
   private static final HandlerList handlers = new HandlerList();
@@ -19,16 +18,16 @@ public class BlockGravityEvent extends Event {
   @Override
   @Nonnull
   public HandlerList getHandlers() {
-      return handlers;
+    return handlers;
   }
 
   @Nonnull
   public static HandlerList getHandlerList() {
-      return handlers;
+    return handlers;
   }
-  
+
   @Nonnull
   public final Block[] getBlocks() {
-      return blocks;
+    return blocks;
   }
 }

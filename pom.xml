@@ -90,6 +90,51 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>validate</id>
+            <phase>validate</phase>
+            <configuration>
+              <configLocation>google_checks.xml</configLocation>
+              <!-- <suppressionsLocation>suppressions.xml</suppressionsLocation> -->
+              <encoding>UTF-8</encoding>
+              <!-- <failsOnError>true</failsOnError> -->
+              <!-- <consoleOutput>true</consoleOutput> -->
+              <includeTestSourceDirectory>true</includeTestSourceDirectory>
+            </configuration>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.theoryinpractise</groupId>
+        <artifactId>googleformatter-maven-plugin</artifactId>
+        <version>1.7.3</version>
+        <executions>
+          <execution>
+            <id>reformat-sources</id>
+            <configuration>
+              <includeStale>false</includeStale>
+              <style>GOOGLE</style>
+              <formatMain>true</formatMain>
+              <formatTest>true</formatTest>
+              <filterModified>false</filterModified>
+              <skip>false</skip>
+              <fixImports>false</fixImports>
+              <maxLineLength>100</maxLineLength>
+            </configuration>
+            <goals>
+              <goal>format</goal>
+            </goals>
+            <phase>process-sources</phase>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
     <pluginManagement>
       <!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->

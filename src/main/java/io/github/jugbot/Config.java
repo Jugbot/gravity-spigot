@@ -1,47 +1,33 @@
 package io.github.jugbot;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.CharBuffer;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
 
-import org.bukkit.Material;
-import org.bukkit.block.BlockFace;
-import org.bukkit.block.data.Directional;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import com.google.common.base.Charsets;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.bukkit.Material;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 
 public class Config {
   private static Config instance = null;
   private BlockData blockData;
 
   public static Config Instance() {
-    if (instance == null)
-      instance = new Config();
+    if (instance == null) instance = new Config();
     return instance;
   }
 
   private Config() {
     File blockDataConfigFile;
-    if ((blockDataConfigFile = new File(App.Instance().getDataFolder(), "blockdata.csv")).exists()) {
+    if ((blockDataConfigFile = new File(App.Instance().getDataFolder(), "blockdata.csv"))
+        .exists()) {
       loadBlockDataCSV(blockDataConfigFile);
-    } else if ((blockDataConfigFile = new File(App.Instance().getDataFolder(), "blockdata.yml")).exists()) {
+    } else if ((blockDataConfigFile = new File(App.Instance().getDataFolder(), "blockdata.yml"))
+        .exists()) {
       loadBlockDataYAML(blockDataConfigFile);
     } else {
       System.out.println("blockdata.yml doesn't exist, creating it...");
@@ -63,7 +49,8 @@ public class Config {
     FileConfiguration blockDataConfig;
     try {
       blockDataConfig = YamlConfiguration.loadConfiguration(blockDataConfigFile);
-      blockData = new BlockData(blockDataConfig.getConfigurationSection("root.blocks").getValues(false));
+      blockData =
+          new BlockData(blockDataConfig.getConfigurationSection("root.blocks").getValues(false));
     } catch (IllegalArgumentException e) {
       e.printStackTrace();
     }
@@ -71,26 +58,45 @@ public class Config {
 
   private void loadBlockDataCSV(File blockDataConfigFile) {
     blockData = new BlockData();
-    try (CSVParser parser = CSVParser.parse(blockDataConfigFile, Charsets.UTF_8, CSVFormat.DEFAULT)) {
+    try (CSVParser parser =
+        CSVParser.parse(blockDataConfigFile, Charsets.UTF_8, CSVFormat.DEFAULT)) {
       for (CSVRecord record : parser.getRecords()) {
         System.out.println(record.toString());
         Material material = Material.getMaterial(record.get(0));
         if (material == null) {
           if (record.getRecordNumber() != 1) {
-            App.Instance().getLogger().info("[blockdata.csv:(" + record.getRecordNumber() + ")] Material \""
-                + record.get(0) + "\" is not a recogniseable material name, skipping.");
+            App.Instance()
+                .getLogger()
+                .info(
+                    "[blockdata.csv:("
+                        + record.getRecordNumber()
+                        + ")] Material \""
+                        + record.get(0)
+                        + "\" is not a recognizable material name, skipping.");
           }
           continue;
         }
         int[] data;
         try {
-          data = new int[] { Integer.parseUnsignedInt(record.get(1)), Integer.parseUnsignedInt(record.get(2)),
-              Integer.parseUnsignedInt(record.get(3)), Integer.parseUnsignedInt(record.get(4)),
-              Integer.parseUnsignedInt(record.get(5)), Integer.parseUnsignedInt(record.get(6)),
-              Integer.parseUnsignedInt(record.get(7)), };
+          data =
+              new int[] {
+                Integer.parseUnsignedInt(record.get(1)),
+                Integer.parseUnsignedInt(record.get(2)),
+                Integer.parseUnsignedInt(record.get(3)),
+                Integer.parseUnsignedInt(record.get(4)),
+                Integer.parseUnsignedInt(record.get(5)),
+                Integer.parseUnsignedInt(record.get(6)),
+                Integer.parseUnsignedInt(record.get(7)),
+              };
         } catch (NumberFormatException e) {
-          App.Instance().getLogger().info("[blockdata.csv:(" + record.getRecordNumber() + ")] Material \""
-              + record.get(0) + "\" must have data that is a positive int, skipping.");
+          App.Instance()
+              .getLogger()
+              .info(
+                  "[blockdata.csv:("
+                      + record.getRecordNumber()
+                      + ")] Material \""
+                      + record.get(0)
+                      + "\" must have data that is a positive int, skipping.");
           continue;
         }
         blockData.blocks.put(material, data);

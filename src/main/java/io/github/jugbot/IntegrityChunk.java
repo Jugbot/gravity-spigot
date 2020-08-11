@@ -1,7 +1,6 @@
 package io.github.jugbot;
 
 import java.util.List;
-import java.util.concurrent.Callable;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -9,7 +8,6 @@ import org.bukkit.ChunkSnapshot;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
-import org.bukkit.block.data.Directional;
 
 import io.github.jugbot.util.MaxFlow;
 
@@ -58,8 +56,7 @@ public class IntegrityChunk {
         for (int z = 0; z < 16; z++) {
           BlockData block = chunk.getBlockData(x, y, z);
           int[] data = getStructuralData(block);
-          if (data == null)
-            continue;
+          if (data == null) continue;
           XYZ from = new XYZ(x, y, z);
           if (y != 0) {
             XYZ to = new XYZ(x, y - 1, z);
@@ -96,12 +93,13 @@ public class IntegrityChunk {
     }
   }
 
-  void updateChunkIntegrity(Block[] blocks) { }
+  void updateChunkIntegrity(Block[] blocks) {}
+
   void updateChunkIntegrity() {
     MaxFlow.maxFlow(graph, dist, src, dest);
   }
 
-  public Block[] call() {
+  public Block[] getIntegrityViolations() {
     // Run Max Flow and get nodes to remove
     updateChunkIntegrity();
     List<Integer> offending = MaxFlow.getOffendingVertices(graph, dist, src, dest);
@@ -120,20 +118,26 @@ public class IntegrityChunk {
 
   public static void getBrokenBlocks(final IntegrityChunk chunk, final Callback<Block[]> callback) {
     // Run outside of the tick loop
-    Bukkit.getScheduler().runTaskAsynchronously(App.Instance(), new Runnable() {
-      @Override
-      public void run() {
-        final Block[] result = chunk.call();
-        // go back to the tick loop
-        Bukkit.getScheduler().runTask(App.Instance(), new Runnable() {
-          @Override
-          public void run() {
-            // call the callback with the result
-            callback.done(result);
-          }
-        });
-      }
-    });
+    Bukkit.getScheduler()
+        .runTaskAsynchronously(
+            App.Instance(),
+            new Runnable() {
+              @Override
+              public void run() {
+                final Block[] result = chunk.getIntegrityViolations();
+                // go back to the tick loop
+                Bukkit.getScheduler()
+                    .runTask(
+                        App.Instance(),
+                        new Runnable() {
+                          @Override
+                          public void run() {
+                            // call the callback with the result
+                            callback.done(result);
+                          }
+                        });
+              }
+            });
   }
 
   private static final int MASS = 0;
@@ -145,18 +149,23 @@ public class IntegrityChunk {
   private static final int WEST = 6;
 
   /**
-   * 
    * @param block
    * @return ["mass", "up", "down", "north", "east", "south", "west"]
    */
-  static int[] getStructuralData(BlockData block) {
+  static final int[] getStructuralData(BlockData block) {
     Material material = block.getMaterial();
-    if (!material.isSolid())
-      return null;
+    if (!material.isSolid()) return null;
     int[] data = Config.Instance().getBlockData().getData(material);
     if (data == null)
-      return new int[] { 1, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE,
-          Integer.MAX_VALUE, Integer.MAX_VALUE };
+      return new int[] {
+        1,
+        Integer.MAX_VALUE,
+        Integer.MAX_VALUE,
+        Integer.MAX_VALUE,
+        Integer.MAX_VALUE,
+        Integer.MAX_VALUE,
+        Integer.MAX_VALUE
+      };
     return data;
   }
 }

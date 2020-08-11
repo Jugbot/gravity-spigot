@@ -1,6 +1,5 @@
 package io.github.jugbot;
 
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
@@ -8,7 +7,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 
 public class BlockGravityListener implements Listener {
-  // TODO: Changeto pillars of blocks not single blocks for better handling sand
+  // TODO: Change to pillars of blocks not single blocks for better handling sand
   @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
   void onBlockGravity(BlockGravityEvent event) {
     System.out.println("Block Gravity");
@@ -18,7 +17,9 @@ public class BlockGravityListener implements Listener {
       // If block can fall, then make it fall
       // Otherwise just break the block
       if (below != null && below.isPassable()) {
-        block.getWorld().spawnFallingBlock(block.getLocation().add(0.5, 0.0, 0.5), block.getBlockData());
+        block
+            .getWorld()
+            .spawnFallingBlock(block.getLocation().add(0.5, 0.0, 0.5), block.getBlockData());
         block.setType(Material.AIR);
       } else {
         block.breakNaturally();

@@ -9,5 +9,7 @@
     "files.encoding": "utf8",
     "java.jdt.ls.vmargs": "-Dfile.encoding=UTF-8",
     "java.configuration.updateBuildConfiguration": "automatic",
+    "java.checkstyle.version": "8.35",
+    "java.checkstyle.configuration": "/google_checks.xml"
   }
 }

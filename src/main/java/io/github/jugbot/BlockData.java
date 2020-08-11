@@ -1,14 +1,11 @@
 package io.github.jugbot;
 
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.bukkit.Material;
 import org.bukkit.configuration.MemorySection;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
-
-
 
 public class BlockData implements ConfigurationSerializable {
   Map<Material, int[]> blocks;
@@ -29,16 +26,18 @@ public class BlockData implements ConfigurationSerializable {
       } else {
         weights = (Map<String, Object>) kv.getValue();
       }
-      
-      blocks.put(material, new int[] {
-          (int) weights.get("mass"),
-        (int) weights.get("u"),
-        (int) weights.get("d"),
-        (int) weights.get("n"),
-        (int) weights.get("e"),
-        (int) weights.get("s"),
-        (int) weights.get("w")
-      });
+
+      blocks.put(
+          material,
+          new int[] {
+            (int) weights.get("mass"),
+            (int) weights.get("u"),
+            (int) weights.get("d"),
+            (int) weights.get("n"),
+            (int) weights.get("e"),
+            (int) weights.get("s"),
+            (int) weights.get("w")
+          });
     }
   }
 
@@ -62,5 +61,4 @@ public class BlockData implements ConfigurationSerializable {
   public int[] getData(Material material) {
     return blocks.get(material);
   }
-  
 }

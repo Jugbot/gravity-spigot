@@ -16,12 +16,11 @@ public class BlockChangeEvent extends BlockEvent {
   @Override
   @Nonnull
   public HandlerList getHandlers() {
-      return handlers;
+    return handlers;
   }
 
   @Nonnull
   public static HandlerList getHandlerList() {
-      return handlers;
+    return handlers;
   }
-  
 }
