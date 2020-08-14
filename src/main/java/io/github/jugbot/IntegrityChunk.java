@@ -1,23 +1,50 @@
 package io.github.jugbot;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.ChunkSnapshot;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 
 import io.github.jugbot.util.MaxFlow;
+import io.github.jugbot.util.MaxFlow.Edge;
 
 public class IntegrityChunk {
   ChunkSnapshot chunk;
   Chunk originalChunk;
+  // MaxFlow graph data
   List<MaxFlow.Edge>[] graph;
   int[] dist;
-  int src;
-  int dest;
+  static final int nodeCount;
+  static final int src;
+  static final int dest;
+  // For certain graph operations
+  static final int temp_src;
+  static final int temp_dest;
+  // Cached connections to other chunks
+  static final int north;
+  static final int east;
+  static final int south;
+  static final int west;
+
+  static {
+    int chunkSize = 16 * 16 * 256;
+    src = chunkSize++;
+    dest = chunkSize++;
+    temp_src = chunkSize++;
+    temp_dest = chunkSize++;
+    north = chunkSize++;
+    east = chunkSize++;
+    south = chunkSize++;
+    west = chunkSize++;
+    nodeCount = chunkSize;
+  }
 
   class XYZ {
     public int x, y, z;
@@ -40,10 +67,41 @@ public class IntegrityChunk {
     }
   }
 
+  private void createVertex(int x, int y, int z, int[] data) {
+    XYZ from = new XYZ(x, y, z);
+    if (y != 0) {
+      XYZ to = new XYZ(x, y - 1, z);
+      MaxFlow.createEdge(graph, from.index, to.index, data[DOWN], Edge.Direction.DOWN);
+    }
+    if (y != 255) {
+      XYZ to = new XYZ(x, y + 1, z);
+      MaxFlow.createEdge(graph, from.index, to.index, data[UP], Edge.Direction.UP);
+    }
+    if (x != 0) {
+      XYZ to = new XYZ(x - 1, y, z);
+      MaxFlow.createEdge(graph, from.index, to.index, data[WEST], Edge.Direction.WEST);
+    }
+    if (x != 15) {
+      XYZ to = new XYZ(x + 1, y, z);
+      MaxFlow.createEdge(graph, from.index, to.index, data[EAST], Edge.Direction.EAST);
+    }
+    if (z != 0) {
+      XYZ to = new XYZ(x, y, z - 1);
+      MaxFlow.createEdge(graph, from.index, to.index, data[NORTH], Edge.Direction.NORTH);
+    }
+    if (z != 15) {
+      XYZ to = new XYZ(x, y, z + 1);
+      MaxFlow.createEdge(graph, from.index, to.index, data[SOUTH], Edge.Direction.SOUTH);
+    }
+    // Add edge from source to block with capacity of block weight
+    MaxFlow.createEdge(graph, src, from.index, data[MASS], Edge.Direction.OTHER);
+    // Blocks on the bottom row will connect to the sink
+    if (y == 0) {
+      MaxFlow.createEdge(graph, from.index, dest, Integer.MAX_VALUE, Edge.Direction.OTHER);
+    }
+  }
+
   IntegrityChunk(Chunk liveChunk) {
-    int nodeCount = 16 * 16 * 256 + 2;
-    src = nodeCount - 1;
-    dest = nodeCount - 2;
     graph = MaxFlow.createGraph(nodeCount);
     dist = new int[nodeCount];
     chunk = liveChunk.getChunkSnapshot();
@@ -57,51 +115,34 @@ public class IntegrityChunk {
           BlockData block = chunk.getBlockData(x, y, z);
           int[] data = getStructuralData(block);
           if (data == null) continue;
-          XYZ from = new XYZ(x, y, z);
-          if (y != 0) {
-            XYZ to = new XYZ(x, y - 1, z);
-            MaxFlow.addEdge(graph, from.index, to.index, data[DOWN]);
-          }
-          if (y != 255) {
-            XYZ to = new XYZ(x, y + 1, z);
-            MaxFlow.addEdge(graph, from.index, to.index, data[UP]);
-          }
-          if (x != 0) {
-            XYZ to = new XYZ(x - 1, y, z);
-            MaxFlow.addEdge(graph, from.index, to.index, data[WEST]);
-          }
-          if (x != 15) {
-            XYZ to = new XYZ(x + 1, y, z);
-            MaxFlow.addEdge(graph, from.index, to.index, data[EAST]);
-          }
-          if (z != 0) {
-            XYZ to = new XYZ(x, y, z - 1);
-            MaxFlow.addEdge(graph, from.index, to.index, data[NORTH]);
-          }
-          if (z != 15) {
-            XYZ to = new XYZ(x, y, z + 1);
-            MaxFlow.addEdge(graph, from.index, to.index, data[SOUTH]);
-          }
-          // Add edge from source to block with capacity of block weight
-          MaxFlow.addEdge(graph, src, from.index, data[MASS]);
-          // Blocks on the bottom row will connect to the sink
-          if (y == 0) {
-            MaxFlow.addEdge(graph, from.index, dest, Integer.MAX_VALUE);
-          }
+          createVertex(x, y, z, data);
         }
       }
     }
   }
 
-  void updateChunkIntegrity(Block[] blocks) {}
+  /** Will undo some flow after removing */
+  void removeVertices() {}
 
-  void updateChunkIntegrity() {
-    MaxFlow.maxFlow(graph, dist, src, dest);
+  /** Assumes that replacing Block edges have sufficient edge capacity (flow < C) */
+  void replaceVertices(Map<Integer, int[]> blockdata) {}
+
+  /** Update chunk with added / removed blocks */
+  void update(Block[] blocks) {
+    List<Integer> toAdd = new ArrayList<>();
+    for (Block block : blocks) {
+      Location loc = block.getLocation().subtract(originalChunk.getX(), 0, originalChunk.getZ());
+      int index = new XYZ(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()).index;
+      int[] data = getStructuralData(block.getBlockData());
+      for (Edge e : graph[index]) {
+        // how to get existing block-specific edges :/
+      }
+    }
   }
 
   public Block[] getIntegrityViolations() {
     // Run Max Flow and get nodes to remove
-    updateChunkIntegrity();
+    MaxFlow.maxFlow(graph, dist, src, dest);
     List<Integer> offending = MaxFlow.getOffendingVertices(graph, dist, src, dest);
     // Translate vertices to Blocks w/ Locations
     Block[] blocks = new Block[offending.size()];

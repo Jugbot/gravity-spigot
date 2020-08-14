@@ -11,6 +11,7 @@ public class BlockData implements ConfigurationSerializable {
   Map<Material, int[]> blocks;
 
   BlockData() {
+    // TODO: Change to ENUM MAP
     blocks = new HashMap<Material, int[]>();
   }
 

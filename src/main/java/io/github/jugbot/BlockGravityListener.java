@@ -17,9 +17,7 @@ public class BlockGravityListener implements Listener {
       // If block can fall, then make it fall
       // Otherwise just break the block
       if (below != null && below.isPassable()) {
-        block
-            .getWorld()
-            .spawnFallingBlock(block.getLocation().add(0.5, 0.0, 0.5), block.getBlockData());
+        block.getWorld().spawnFallingBlock(block.getLocation().add(0.5, 0.0, 0.5), block.getBlockData());
         block.setType(Material.AIR);
       } else {
         block.breakNaturally();

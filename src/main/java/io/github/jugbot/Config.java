@@ -23,11 +23,9 @@ public class Config {
 
   private Config() {
     File blockDataConfigFile;
-    if ((blockDataConfigFile = new File(App.Instance().getDataFolder(), "blockdata.csv"))
-        .exists()) {
+    if ((blockDataConfigFile = new File(App.Instance().getDataFolder(), "blockdata.csv")).exists()) {
       loadBlockDataCSV(blockDataConfigFile);
-    } else if ((blockDataConfigFile = new File(App.Instance().getDataFolder(), "blockdata.yml"))
-        .exists()) {
+    } else if ((blockDataConfigFile = new File(App.Instance().getDataFolder(), "blockdata.yml")).exists()) {
       loadBlockDataYAML(blockDataConfigFile);
     } else {
       System.out.println("blockdata.yml doesn't exist, creating it...");
@@ -49,8 +47,7 @@ public class Config {
     FileConfiguration blockDataConfig;
     try {
       blockDataConfig = YamlConfiguration.loadConfiguration(blockDataConfigFile);
-      blockData =
-          new BlockData(blockDataConfig.getConfigurationSection("root.blocks").getValues(false));
+      blockData = new BlockData(blockDataConfig.getConfigurationSection("root.blocks").getValues(false));
     } catch (IllegalArgumentException e) {
       e.printStackTrace();
     }
@@ -58,8 +55,7 @@ public class Config {
 
   private void loadBlockDataCSV(File blockDataConfigFile) {
     blockData = new BlockData();
-    try (CSVParser parser =
-        CSVParser.parse(blockDataConfigFile, Charsets.UTF_8, CSVFormat.DEFAULT)) {
+    try (CSVParser parser = CSVParser.parse(blockDataConfigFile, Charsets.UTF_8, CSVFormat.DEFAULT)) {
       for (CSVRecord record : parser.getRecords()) {
         System.out.println(record.toString());
         Material material = Material.getMaterial(record.get(0));

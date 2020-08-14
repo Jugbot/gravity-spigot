@@ -6,11 +6,23 @@ public class MaxFlow {
 
   public static class Edge {
     int t, rev, cap, f;
+    Direction tag;
 
-    public Edge(int t, int rev, int cap) {
+    public enum Direction {
+      OTHER,
+      NORTH,
+      EAST,
+      SOUTH,
+      WEST,
+      UP,
+      DOWN,
+    }
+
+    public Edge(int t, int rev, int cap, Direction tag) {
       this.t = t;
       this.rev = rev;
       this.cap = cap;
+      this.tag = tag;
     }
   }
 
@@ -20,13 +32,72 @@ public class MaxFlow {
     return graph;
   }
 
-  public static void addEdge(List<Edge>[] graph, int u, int v, int cap) {
-    graph[u].add(new Edge(v, graph[v].size(), cap));
-    graph[v].add(new Edge(u, graph[u].size() - 1, 0));
+  public static void createEdge(List<Edge>[] graph, int u, int v, int cap) {
+    createEdge(graph, u, v, cap, Edge.Direction.OTHER);
   }
 
-  // https://cs.stackexchange.com/questions/86801/how-to-find-max-flow-in-a-graph-after-decrementing-an-edge-capacity
-  public static void reduceEdge(List<Edge>[] graph, int s, int t, int u, int e, int delta) {}
+  public static void createEdge(List<Edge>[] graph, int u, int v, int cap, Edge.Direction tag) {
+    graph[u].add(new Edge(v, graph[v].size(), cap, tag));
+    graph[v].add(new Edge(u, graph[u].size() - 1, 0, Edge.Direction.OTHER));
+  }
+
+  private static void deleteEdge(List<Edge>[] graph, int u, int e) {
+    Edge edge = graph[u].remove(e);
+    graph[edge.t].remove(edge.rev);
+  }
+
+  private static void deleteEdges(List<Edge>[] graph, int u) {
+    for (int i = graph[u].size() - 1; i >= 0; i--) {
+      if (graph[u].get(i).cap == 0) continue;
+      deleteEdge(graph, u, i);
+    }
+  }
+
+  /**
+   * Modifies edge weights on existing edges. https://cstheory.stackexchange.com/a/10186
+   *
+   * @param toChange The vertex index, edge index, and new edge capacity.
+   * @return The change in max flow.
+   */
+  public static int changeEdges(
+      List<Edge>[] graph, int[] dist, int s, int t, int[][] toChange, int temp_s, int temp_t) {
+    deleteEdges(graph, temp_s);
+    deleteEdges(graph, temp_t);
+    int max_flow = 0;
+    List<Edge> foLater = new ArrayList<>();
+    for (int[] changeAt : toChange) {
+      int u = changeAt[0];
+      int e = changeAt[1];
+      int cap = changeAt[2];
+      assert e < graph[u].size() : "Edge does not exist!";
+      Edge existing = graph[u].get(e);
+      // Check if flow should be reduced
+      if (existing.f > cap) {
+        int df = existing.f - cap;
+        // Create temp edge to rebalance edges later
+        createEdge(graph, existing.t, temp_t, df); // was inf
+        createEdge(graph, temp_s, u, df);
+        // Save edge for if we need to do further fixing of residual graph
+        foLater.add(graph[temp_s].get(graph[temp_s].size() - 1));
+        // potential max flow if all reductions in flow are satisfied later
+        max_flow += df;
+      }
+      existing.cap = cap;
+    }
+    // If all flow reductions are satisfied, return
+    int df = max_flow - MaxFlow.maxFlow(graph, dist, temp_s, temp_t);
+    if (df == 0) return MaxFlow.maxFlow(graph, dist, s, t);
+    // Else reduce flow on entire graph
+    // NOTE: Might flow too much?
+    createEdge(graph, s, t, Integer.MAX_VALUE);
+    int final_flow = MaxFlow.maxFlow(graph, dist, temp_s, temp_t);
+    assert final_flow == df : ("final_flow: " + final_flow + " should be " + df);
+    deleteEdge(graph, s, graph[s].size() - 1);
+    // Probably harmless but delete edges anyways
+    deleteEdges(graph, temp_s);
+    deleteEdges(graph, temp_t);
+    return -final_flow;
+  }
 
   static boolean dinicBfs(List<Edge>[] graph, int src, int dest, int[] dist) {
     Arrays.fill(dist, -1);
@@ -64,7 +135,6 @@ public class MaxFlow {
 
   public static int maxFlow(List<Edge>[] graph, int[] dist, int src, int dest) {
     int flow = 0;
-    // int[] dist = new int[graph.length];
     while (dinicBfs(graph, src, dest, dist)) {
       int[] ptr = new int[graph.length];
       while (true) {
@@ -76,8 +146,7 @@ public class MaxFlow {
     return flow;
   }
 
-  public static List<Integer> getOffendingVertices(
-      List<Edge>[] graph, int[] dist, int src, int dest) {
+  public static List<Integer> getOffendingVertices(List<Edge>[] graph, int[] dist, int src, int dest) {
     List<Integer> result = new ArrayList<>();
     for (Edge e : graph[src]) {
       int u = e.t;
