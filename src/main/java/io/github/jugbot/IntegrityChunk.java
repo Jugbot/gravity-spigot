@@ -72,33 +72,33 @@ public class IntegrityChunk {
     XYZ from = new XYZ(x, y, z);
     if (y != 0) {
       XYZ to = new XYZ(x, y - 1, z);
-      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.DOWN), Edge.Direction.DOWN);
+      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.DOWN), IntegrityData.DOWN);
     }
     if (y != 255) {
       XYZ to = new XYZ(x, y + 1, z);
-      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.UP), Edge.Direction.UP);
+      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.UP), IntegrityData.UP);
     }
     if (x != 0) {
       XYZ to = new XYZ(x - 1, y, z);
-      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.WEST), Edge.Direction.WEST);
+      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.WEST), IntegrityData.WEST);
     }
     if (x != 15) {
       XYZ to = new XYZ(x + 1, y, z);
-      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.EAST), Edge.Direction.EAST);
+      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.EAST), IntegrityData.EAST);
     }
     if (z != 0) {
       XYZ to = new XYZ(x, y, z - 1);
-      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.NORTH), Edge.Direction.NORTH);
+      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.NORTH), IntegrityData.NORTH);
     }
     if (z != 15) {
       XYZ to = new XYZ(x, y, z + 1);
-      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.SOUTH), Edge.Direction.SOUTH);
+      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.SOUTH), IntegrityData.SOUTH);
     }
     // Add edge from source to block with capacity of block weight
-    MaxFlow.createEdge(graph, src, from.index, data.get(IntegrityData.MASS), Edge.Direction.OTHER);
+    MaxFlow.createEdge(graph, src, from.index, data.get(IntegrityData.MASS), null);
     // Blocks on the bottom row will connect to the sink
     if (y == 0) {
-      MaxFlow.createEdge(graph, from.index, dest, Integer.MAX_VALUE, Edge.Direction.OTHER);
+      MaxFlow.createEdge(graph, from.index, dest, Integer.MAX_VALUE, null);
     }
   }
 

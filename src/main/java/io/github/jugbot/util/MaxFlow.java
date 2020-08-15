@@ -2,23 +2,15 @@ package io.github.jugbot.util;
 
 import java.util.*;
 
+import io.github.jugbot.IntegrityData;
+
 public class MaxFlow {
 
   public static class Edge {
     int t, rev, cap, f;
-    Direction tag;
+    IntegrityData tag;
 
-    public enum Direction {
-      OTHER,
-      NORTH,
-      EAST,
-      SOUTH,
-      WEST,
-      UP,
-      DOWN,
-    }
-
-    public Edge(int t, int rev, int cap, Direction tag) {
+    public Edge(int t, int rev, int cap, IntegrityData tag) {
       this.t = t;
       this.rev = rev;
       this.cap = cap;
@@ -33,12 +25,12 @@ public class MaxFlow {
   }
 
   public static void createEdge(List<Edge>[] graph, int u, int v, int cap) {
-    createEdge(graph, u, v, cap, Edge.Direction.OTHER);
+    createEdge(graph, u, v, cap, null);
   }
 
-  public static void createEdge(List<Edge>[] graph, int u, int v, int cap, Edge.Direction tag) {
+  public static void createEdge(List<Edge>[] graph, int u, int v, int cap, IntegrityData tag) {
     graph[u].add(new Edge(v, graph[v].size(), cap, tag));
-    graph[v].add(new Edge(u, graph[u].size() - 1, 0, Edge.Direction.OTHER));
+    graph[v].add(new Edge(u, graph[u].size() - 1, 0, null));
   }
 
   private static void deleteEdge(List<Edge>[] graph, int u, int e) {
