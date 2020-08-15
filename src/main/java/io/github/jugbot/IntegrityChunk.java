@@ -1,6 +1,7 @@
 package io.github.jugbot;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
@@ -67,34 +68,34 @@ public class IntegrityChunk {
     }
   }
 
-  private void createVertex(int x, int y, int z, int[] data) {
+  private void createVertex(int x, int y, int z, EnumMap<IntegrityData, Integer> data) {
     XYZ from = new XYZ(x, y, z);
     if (y != 0) {
       XYZ to = new XYZ(x, y - 1, z);
-      MaxFlow.createEdge(graph, from.index, to.index, data[DOWN], Edge.Direction.DOWN);
+      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.DOWN), Edge.Direction.DOWN);
     }
     if (y != 255) {
       XYZ to = new XYZ(x, y + 1, z);
-      MaxFlow.createEdge(graph, from.index, to.index, data[UP], Edge.Direction.UP);
+      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.UP), Edge.Direction.UP);
     }
     if (x != 0) {
       XYZ to = new XYZ(x - 1, y, z);
-      MaxFlow.createEdge(graph, from.index, to.index, data[WEST], Edge.Direction.WEST);
+      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.WEST), Edge.Direction.WEST);
     }
     if (x != 15) {
       XYZ to = new XYZ(x + 1, y, z);
-      MaxFlow.createEdge(graph, from.index, to.index, data[EAST], Edge.Direction.EAST);
+      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.EAST), Edge.Direction.EAST);
     }
     if (z != 0) {
       XYZ to = new XYZ(x, y, z - 1);
-      MaxFlow.createEdge(graph, from.index, to.index, data[NORTH], Edge.Direction.NORTH);
+      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.NORTH), Edge.Direction.NORTH);
     }
     if (z != 15) {
       XYZ to = new XYZ(x, y, z + 1);
-      MaxFlow.createEdge(graph, from.index, to.index, data[SOUTH], Edge.Direction.SOUTH);
+      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.SOUTH), Edge.Direction.SOUTH);
     }
     // Add edge from source to block with capacity of block weight
-    MaxFlow.createEdge(graph, src, from.index, data[MASS], Edge.Direction.OTHER);
+    MaxFlow.createEdge(graph, src, from.index, data.get(IntegrityData.MASS), Edge.Direction.OTHER);
     // Blocks on the bottom row will connect to the sink
     if (y == 0) {
       MaxFlow.createEdge(graph, from.index, dest, Integer.MAX_VALUE, Edge.Direction.OTHER);
@@ -113,7 +114,7 @@ public class IntegrityChunk {
       for (int x = 0; x < 16; x++) {
         for (int z = 0; z < 16; z++) {
           BlockData block = chunk.getBlockData(x, y, z);
-          int[] data = getStructuralData(block);
+          EnumMap<IntegrityData, Integer> data = getStructuralData(block);
           if (data == null) continue;
           createVertex(x, y, z, data);
         }
@@ -133,7 +134,7 @@ public class IntegrityChunk {
     for (Block block : blocks) {
       Location loc = block.getLocation().subtract(originalChunk.getX(), 0, originalChunk.getZ());
       int index = new XYZ(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()).index;
-      int[] data = getStructuralData(block.getBlockData());
+      EnumMap<IntegrityData, Integer> data = getStructuralData(block.getBlockData());
       for (Edge e : graph[index]) {
         // how to get existing block-specific edges :/
       }
@@ -181,32 +182,11 @@ public class IntegrityChunk {
             });
   }
 
-  private static final int MASS = 0;
-  private static final int UP = 1;
-  private static final int DOWN = 2;
-  private static final int NORTH = 3;
-  private static final int EAST = 4;
-  private static final int SOUTH = 5;
-  private static final int WEST = 6;
-
-  /**
-   * @param block
-   * @return ["mass", "up", "down", "north", "east", "south", "west"]
-   */
-  static final int[] getStructuralData(BlockData block) {
+  static final EnumMap<IntegrityData, Integer> getStructuralData(BlockData block) {
     Material material = block.getMaterial();
     if (!material.isSolid()) return null;
-    int[] data = Config.Instance().getBlockData().getData(material);
-    if (data == null)
-      return new int[] {
-        1,
-        Integer.MAX_VALUE,
-        Integer.MAX_VALUE,
-        Integer.MAX_VALUE,
-        Integer.MAX_VALUE,
-        Integer.MAX_VALUE,
-        Integer.MAX_VALUE
-      };
+    EnumMap<IntegrityData, Integer> data = Config.Instance().getBlockData().getData(material);
+    if (data == null) return Config.Instance().getBlockData().getDefault();
     return data;
   }
 }

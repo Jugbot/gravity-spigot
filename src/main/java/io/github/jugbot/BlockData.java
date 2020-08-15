@@ -1,5 +1,6 @@
 package io.github.jugbot;
 
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -8,16 +9,16 @@ import org.bukkit.configuration.MemorySection;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 
 public class BlockData implements ConfigurationSerializable {
-  Map<Material, int[]> blocks;
+  Map<Material, EnumMap<IntegrityData, Integer>> blocks;
+  EnumMap<IntegrityData, Integer> defaultBlock;
 
   BlockData() {
-    // TODO: Change to ENUM MAP
-    blocks = new HashMap<Material, int[]>();
+    blocks = new HashMap<Material, EnumMap<IntegrityData, Integer>>();
   }
 
   BlockData(Map<String, Object> serialized) {
     System.out.println("Initializing blockmap...");
-    blocks = new HashMap<Material, int[]>();
+    blocks = new HashMap<Material, EnumMap<IntegrityData, Integer>>();
     for (Map.Entry<String, Object> kv : serialized.entrySet()) {
       Material material = Material.matchMaterial(kv.getKey());
       System.out.println(material);
@@ -28,38 +29,51 @@ public class BlockData implements ConfigurationSerializable {
         weights = (Map<String, Object>) kv.getValue();
       }
 
-      blocks.put(
-          material,
-          new int[] {
-            (int) weights.get("mass"),
-            (int) weights.get("u"),
-            (int) weights.get("d"),
-            (int) weights.get("n"),
-            (int) weights.get("e"),
-            (int) weights.get("s"),
-            (int) weights.get("w")
-          });
+      EnumMap<IntegrityData, Integer> data = new EnumMap(IntegrityData.class);
+      data.put(IntegrityData.MASS, (int) weights.get("mass"));
+      data.put(IntegrityData.UP, (int) weights.get("u"));
+      data.put(IntegrityData.DOWN, (int) weights.get("d"));
+      data.put(IntegrityData.NORTH, (int) weights.get("n"));
+      data.put(IntegrityData.EAST, (int) weights.get("e"));
+      data.put(IntegrityData.SOUTH, (int) weights.get("s"));
+      data.put(IntegrityData.WEST, (int) weights.get("w"));
+
+      blocks.put(material, data);
     }
   }
 
   @Override
   public Map<String, Object> serialize() {
     Map<String, Object> map = new HashMap<>();
-    for (Map.Entry<Material, int[]> kv : blocks.entrySet()) {
+    for (Map.Entry<Material, EnumMap<IntegrityData, Integer>> kv : blocks.entrySet()) {
       Map<String, Integer> blockData = new HashMap<>();
-      blockData.put("mass", kv.getValue()[0]);
-      blockData.put("u", kv.getValue()[1]);
-      blockData.put("d", kv.getValue()[2]);
-      blockData.put("n", kv.getValue()[3]);
-      blockData.put("e", kv.getValue()[4]);
-      blockData.put("s", kv.getValue()[5]);
-      blockData.put("w", kv.getValue()[6]);
+      blockData.put("mass", kv.getValue().get(IntegrityData.MASS));
+      blockData.put("u", kv.getValue().get(IntegrityData.UP));
+      blockData.put("d", kv.getValue().get(IntegrityData.DOWN));
+      blockData.put("n", kv.getValue().get(IntegrityData.NORTH));
+      blockData.put("e", kv.getValue().get(IntegrityData.EAST));
+      blockData.put("s", kv.getValue().get(IntegrityData.SOUTH));
+      blockData.put("w", kv.getValue().get(IntegrityData.WEST));
       map.put(kv.getKey().name(), blockData);
     }
     return map;
   }
 
-  public int[] getData(Material material) {
+  public EnumMap<IntegrityData, Integer> getData(Material material) {
     return blocks.get(material);
+  }
+
+  public EnumMap<IntegrityData, Integer> getDefault() {
+    if (defaultBlock == null) {
+      defaultBlock = new EnumMap(IntegrityData.class);
+      defaultBlock.put(IntegrityData.MASS, 1);
+      defaultBlock.put(IntegrityData.UP, Integer.MAX_VALUE);
+      defaultBlock.put(IntegrityData.DOWN, Integer.MAX_VALUE);
+      defaultBlock.put(IntegrityData.NORTH, Integer.MAX_VALUE);
+      defaultBlock.put(IntegrityData.EAST, Integer.MAX_VALUE);
+      defaultBlock.put(IntegrityData.SOUTH, Integer.MAX_VALUE);
+      defaultBlock.put(IntegrityData.WEST, Integer.MAX_VALUE);
+    }
+    return defaultBlock;
   }
 }
