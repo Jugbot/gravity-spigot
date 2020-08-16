@@ -1,12 +1,13 @@
 package io.github.jugbot.util;
 
+import java.io.Serializable;
 import java.util.*;
 
 import io.github.jugbot.IntegrityData;
 
 public class MaxFlow {
 
-  public static class Edge {
+  public static class Edge implements Serializable {
     int t, rev, cap, f;
     IntegrityData tag;
 

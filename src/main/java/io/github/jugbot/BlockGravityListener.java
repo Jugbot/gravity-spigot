@@ -13,6 +13,7 @@ public class BlockGravityListener implements Listener {
     System.out.println("Block Gravity");
 
     for (Block block : event.getBlocks()) {
+      // System.out.println(block.getLocation());
       Block below = block.getRelative(0, -1, 0);
       // If block can fall, then make it fall
       // Otherwise just break the block

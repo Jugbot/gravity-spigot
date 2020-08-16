@@ -1,5 +1,6 @@
 package io.github.jugbot;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
@@ -10,18 +11,21 @@ import org.bukkit.Chunk;
 import org.bukkit.ChunkSnapshot;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 
 import io.github.jugbot.util.MaxFlow;
 import io.github.jugbot.util.MaxFlow.Edge;
 
-public class IntegrityChunk {
-  ChunkSnapshot chunk;
-  Chunk originalChunk;
+public class IntegrityChunk implements Serializable {
+  // Chunk association
+  private final int x;
+  private final int z;
+  private final String worldName;
   // MaxFlow graph data
-  List<MaxFlow.Edge>[] graph;
-  int[] dist;
+  private List<MaxFlow.Edge>[] graph;
+  private int[] dist;
   static final int nodeCount;
   static final int src;
   static final int dest;
@@ -102,11 +106,7 @@ public class IntegrityChunk {
     }
   }
 
-  IntegrityChunk(Chunk liveChunk) {
-    graph = MaxFlow.createGraph(nodeCount);
-    dist = new int[nodeCount];
-    chunk = liveChunk.getChunkSnapshot();
-    originalChunk = liveChunk;
+  private void initGraph(ChunkSnapshot chunk) {
     // Translate chunk to graph
     // Note the order of blocks is incremental on the y-axis
     // for some handy computation later
@@ -122,6 +122,21 @@ public class IntegrityChunk {
     }
   }
 
+  IntegrityChunk(World world, int x, int z) {
+    this(world.getChunkAt(x, z));
+  }
+
+  IntegrityChunk(Chunk liveChunk) {
+    x = liveChunk.getX();
+    z = liveChunk.getZ();
+    // System.out.println(x+ " "+z);
+    worldName = liveChunk.getWorld().getName();
+    graph = MaxFlow.createGraph(nodeCount);
+    dist = new int[nodeCount];
+    ChunkSnapshot chunk = liveChunk.getChunkSnapshot();
+    initGraph(chunk);
+  }
+
   /** Will undo some flow after removing */
   void removeVertices() {}
 
@@ -132,7 +147,7 @@ public class IntegrityChunk {
   void update(Block[] blocks) {
     List<Integer> toAdd = new ArrayList<>();
     for (Block block : blocks) {
-      Location loc = block.getLocation().subtract(originalChunk.getX(), 0, originalChunk.getZ());
+      Location loc = block.getLocation().subtract(this.getBlockX(), 0, this.getBlockZ());
       int index = new XYZ(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()).index;
       EnumMap<IntegrityData, Integer> data = getStructuralData(block.getBlockData());
       for (Edge e : graph[index]) {
@@ -141,15 +156,17 @@ public class IntegrityChunk {
     }
   }
 
-  public Block[] getIntegrityViolations() {
+  /** Called Asynchronously */
+  private Location[] getIntegrityViolations() {
     // Run Max Flow and get nodes to remove
     MaxFlow.maxFlow(graph, dist, src, dest);
     List<Integer> offending = MaxFlow.getOffendingVertices(graph, dist, src, dest);
     // Translate vertices to Blocks w/ Locations
-    Block[] blocks = new Block[offending.size()];
+    Location[] blocks = new Location[offending.size()];
+    World world = getWorld();
     for (int i = 0; i < offending.size(); i++) {
-      XYZ chunkLocation = new XYZ(offending.get(i));
-      blocks[i] = (originalChunk.getBlock(chunkLocation.x, chunkLocation.y, chunkLocation.z));
+      XYZ loc = new XYZ(offending.get(i));
+      blocks[i] = new Location(world, loc.x + getBlockX(), loc.y, loc.z + getBlockZ());
     }
     return blocks;
   }
@@ -158,7 +175,8 @@ public class IntegrityChunk {
     void done(T result);
   }
 
-  public static void getBrokenBlocks(final IntegrityChunk chunk, final Callback<Block[]> callback) {
+  /** Called Asynchronously */
+  public void getBrokenBlocks(final Callback<Location[]> callback) {
     // Run outside of the tick loop
     Bukkit.getScheduler()
         .runTaskAsynchronously(
@@ -166,7 +184,8 @@ public class IntegrityChunk {
             new Runnable() {
               @Override
               public void run() {
-                final Block[] result = chunk.getIntegrityViolations();
+                // NOTE: potential thead danger
+                final Location[] result = getIntegrityViolations();
                 // go back to the tick loop
                 Bukkit.getScheduler()
                     .runTask(
@@ -188,5 +207,29 @@ public class IntegrityChunk {
     EnumMap<IntegrityData, Integer> data = Config.Instance().getBlockData().getData(material);
     if (data == null) return Config.Instance().getBlockData().getDefault();
     return data;
+  }
+
+  public int getX() {
+    return x;
+  }
+
+  public int getZ() {
+    return z;
+  }
+
+  public int getBlockX() {
+    return x * 16;
+  }
+
+  public int getBlockZ() {
+    return z * 16;
+  }
+
+  public World getWorld() {
+    return Bukkit.getWorld(worldName);
+  }
+
+  public String getWorldName() {
+    return worldName;
   }
 }
