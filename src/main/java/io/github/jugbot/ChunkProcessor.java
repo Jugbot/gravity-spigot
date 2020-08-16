@@ -1,9 +1,12 @@
 package io.github.jugbot;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -20,7 +23,7 @@ public class ChunkProcessor {
   private static ChunkProcessor instance;
   // Operation queue and status
   // TODO: Change to Map<Chunk, List<Block>> to allow queueing block changes
-  LinkedHashSet<Chunk> chunkUpdateQueue = new LinkedHashSet<Chunk>();
+  LinkedHashMap<Chunk, List<Block>> chunkUpdateQueue = new LinkedHashMap<>();
   Set<Chunk> inProgress = new HashSet<Chunk>();
   // Loaded chunks
   Map<Chunk, IntegrityChunk> loadedChunks = new HashMap<>();
@@ -60,28 +63,38 @@ public class ChunkProcessor {
     }
   }
 
-  public void processChunk(Chunk chunk) {
-    chunkUpdateQueue.add(chunk);
+  public void processBlock(Block block) {
+    Chunk chunk = block.getChunk();
+    List<Block> blocks = chunkUpdateQueue.get(chunk);
+    if (blocks == null) {
+      blocks = new ArrayList<>();
+      chunkUpdateQueue.put(chunk, blocks);
+    }
+    blocks.add(block);
+    // Currently just launch a thread whenever there are changes but maybe there is a better way
     processChunks();
   }
 
   private void processChunks() {
     // Make set of dirty chunks that are not being processed
-    Set<Chunk> shouldUpdate = new HashSet<Chunk>(chunkUpdateQueue);
-    shouldUpdate.removeAll(inProgress);
+    Map<Chunk, List<Block>> shouldUpdate = new HashMap<>(chunkUpdateQueue);
+    shouldUpdate.keySet().removeAll(inProgress);
     // Remove chunks to operate from update queue
-    chunkUpdateQueue.removeAll(shouldUpdate);
+    chunkUpdateQueue.keySet().removeAll(shouldUpdate.keySet());
     // Mark chunks as in progress
-    inProgress.addAll(shouldUpdate);
+    inProgress.addAll(shouldUpdate.keySet());
 
-    for (Chunk chunk : shouldUpdate) {
-      IntegrityChunk integrityChunk = loadedChunks.get(chunk); // new IntegrityChunk(chunk);
+    for (Chunk chunk : shouldUpdate.keySet()) {
+      // TODO: Parallelize this
+      IntegrityChunk integrityChunk = loadedChunks.get(chunk);
       // Just in case
       if (integrityChunk == null) {
         System.out.println("Chunk not loaded! " + chunk.toString());
         loadChunk(chunk);
         integrityChunk = loadedChunks.get(chunk);
       }
+      // Update integrity
+      integrityChunk.update(shouldUpdate.get(chunk));
       // Thread & Callback
       integrityChunk.getBrokenBlocks(
           new IntegrityChunk.Callback<Location[]>() {

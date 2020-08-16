@@ -54,9 +54,7 @@ public class MaxFlowTest {
     int t = random.nextInt(V - 2);
     int preresultA = MaxFlow.maxFlow(graphA, new int[V], s, t);
     System.out.println(preresultA);
-    int resultA =
-        MaxFlow.changeEdges(graphA, new int[V], s, t, toChange.toArray(new int[3][toChange.size()]), V - 1, V - 2)
-            + preresultA;
+    int resultA = MaxFlow.changeEdges(graphA, new int[V], s, t, toChange, V - 1, V - 2) + preresultA;
     int resultB = MaxFlow.maxFlow(graphB, new int[V], s, t);
     assertTrue(MaxFlow.maxFlow(graphA, new int[V], s, t) == 0 && MaxFlow.maxFlow(graphB, new int[V], s, t) == 0);
     assertTrue(resultA == resultB, resultA + " != " + resultB);

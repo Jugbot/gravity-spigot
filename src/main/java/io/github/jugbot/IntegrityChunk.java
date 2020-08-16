@@ -3,8 +3,10 @@ package io.github.jugbot;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -137,23 +139,34 @@ public class IntegrityChunk implements Serializable {
     initGraph(chunk);
   }
 
-  /** Will undo some flow after removing */
-  void removeVertices() {}
-
-  /** Assumes that replacing Block edges have sufficient edge capacity (flow < C) */
-  void replaceVertices(Map<Integer, int[]> blockdata) {}
-
   /** Update chunk with added / removed blocks */
-  void update(Block[] blocks) {
-    List<Integer> toAdd = new ArrayList<>();
+  void update(Iterable<Block> blocks) {
+    List<int[]> toChange = new ArrayList<>();
     for (Block block : blocks) {
       Location loc = block.getLocation().subtract(this.getBlockX(), 0, this.getBlockZ());
       int index = new XYZ(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()).index;
       EnumMap<IntegrityData, Integer> data = getStructuralData(block.getBlockData());
-      for (Edge e : graph[index]) {
-        // how to get existing block-specific edges :/
+      Map<IntegrityData, int[]> blockEdges = new HashMap<>();
+      for (int e = 0; e < graph[index].size(); e++) {
+        Edge edge = graph[index].get(e);
+        blockEdges.put(edge.tag, new int[] {index, e, edge.cap});
       }
+      // If block does not already exist add it
+      if (blockEdges.size() == 0) {
+        createVertex(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), data);
+        continue;
+      }
+      // If it does, queue edges to be changed with new capacities
+      for (IntegrityData edgeType : data.keySet()) {
+        int[] current = blockEdges.get(edgeType);
+        // Note edges on the side of chunks may not exist
+        // TODO: Change for multichunk ops
+        if (current == null) continue;
+        current[2] = data.get(edgeType);
+      }
+      toChange.addAll(blockEdges.values());
     }
+    MaxFlow.changeEdges(graph, dist, src, dest, toChange, temp_src, temp_dest);
   }
 
   /** Called Asynchronously */

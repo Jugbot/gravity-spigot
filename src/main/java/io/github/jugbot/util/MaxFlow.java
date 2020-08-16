@@ -8,8 +8,8 @@ import io.github.jugbot.IntegrityData;
 public class MaxFlow {
 
   public static class Edge implements Serializable {
-    int t, rev, cap, f;
-    IntegrityData tag;
+    public int t, rev, cap, f;
+    public IntegrityData tag;
 
     public Edge(int t, int rev, int cap, IntegrityData tag) {
       this.t = t;
@@ -53,7 +53,7 @@ public class MaxFlow {
    * @return The change in max flow.
    */
   public static int changeEdges(
-      List<Edge>[] graph, int[] dist, int s, int t, int[][] toChange, int temp_s, int temp_t) {
+      List<Edge>[] graph, int[] dist, int s, int t, Iterable<int[]> toChange, int temp_s, int temp_t) {
     deleteEdges(graph, temp_s);
     deleteEdges(graph, temp_t);
     int max_flow = 0;
