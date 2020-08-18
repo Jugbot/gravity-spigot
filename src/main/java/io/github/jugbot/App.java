@@ -19,7 +19,7 @@ public class App extends JavaPlugin {
     ConfigurationSerialization.registerClass(BlockData.class);
     Config.Instance();
     ChunkProcessor.Instance();
-    // IntegrityChunkStorage.Intance();
+    IntegrityChunkStorage.Instance();
     getServer().getPluginManager().registerEvents(new ChunkListener(), this);
     getServer().getPluginManager().registerEvents(new BlockEventListeners(), this);
     getServer().getPluginManager().registerEvents(new BlockGravityListener(), this);
