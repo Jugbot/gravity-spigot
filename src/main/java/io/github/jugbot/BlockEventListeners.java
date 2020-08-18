@@ -11,7 +11,17 @@ public class BlockEventListeners implements Listener {
   @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
   void onBlockBreak(BlockBreakEvent event) {
     System.out.println("Block Break Event");
-    Bukkit.getPluginManager().callEvent(new BlockChangeEvent(event.getBlock()));
+    // Wait until after block is broken
+    App.Instance()
+        .getServer()
+        .getScheduler()
+        .scheduleSyncDelayedTask(
+            App.Instance(),
+            new Runnable() {
+              public void run() {
+                Bukkit.getPluginManager().callEvent(new BlockChangeEvent(event.getBlock()));
+              }
+            });
   }
 
   @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
