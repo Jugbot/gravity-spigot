@@ -11,12 +11,12 @@ public class ChunkListener implements Listener {
   @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
   void onChunkLoad(ChunkLoadEvent event) {
     if (event.isNewChunk()) return;
-    ChunkProcessor.Instance().loadChunk(event.getChunk());
+    // ChunkProcessor.Instance().loadChunk(event.getChunk());
   }
 
   @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
   void onChunkPopulate(ChunkPopulateEvent event) {
-    ChunkProcessor.Instance().loadChunk(event.getChunk());
+    // ChunkProcessor.Instance().loadChunk(event.getChunk());
   }
 
   @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)

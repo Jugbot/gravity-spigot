@@ -45,6 +45,7 @@ public class ChunkProcessor {
           IntegrityChunkStorage.Instance().loadChunk(chunk.getWorld().getName(), chunk.getX(), chunk.getZ());
     }
     if (integrityChunk == null) {
+      System.out.println("Created Chunk " + chunk.toString());
       integrityChunk = new IntegrityChunk(chunk);
       IntegrityChunkStorage.Instance().saveChunk(integrityChunk);
     }
@@ -61,6 +62,7 @@ public class ChunkProcessor {
     if (integrityChunk != null) {
       IntegrityChunkStorage.Instance().saveChunk(integrityChunk);
     }
+    System.out.println("Unloaded Chunk " + chunk.toString());
   }
 
   public void processBlock(Block block) {
@@ -94,7 +96,7 @@ public class ChunkProcessor {
         integrityChunk = loadedChunks.get(chunk);
       }
       // Update integrity
-      integrityChunk.update(shouldUpdate.get(chunk));
+      integrityChunk.update(chunk.getChunkSnapshot());
       // Thread & Callback
       integrityChunk.getBrokenBlocks(
           new IntegrityChunk.Callback<Location[]>() {

@@ -25,9 +25,12 @@ public class IntegrityChunk implements Serializable {
   private final int x;
   private final int z;
   private final String worldName;
+  // Full chunk state to guaruntee no desyncs
+  private Material[] snapshot;
   // MaxFlow graph data
   private List<MaxFlow.Edge>[] graph;
   private int[] dist;
+  static final int chunkSize;
   static final int nodeCount;
   static final int src;
   static final int dest;
@@ -41,16 +44,17 @@ public class IntegrityChunk implements Serializable {
   static final int west;
 
   static {
-    int chunkSize = 16 * 16 * 256;
-    src = chunkSize++;
-    dest = chunkSize++;
-    temp_src = chunkSize++;
-    temp_dest = chunkSize++;
-    north = chunkSize++;
-    east = chunkSize++;
-    south = chunkSize++;
-    west = chunkSize++;
-    nodeCount = chunkSize;
+    chunkSize = 16 * 16 * 256;
+    int total = chunkSize;
+    src = total++;
+    dest = total++;
+    temp_src = total++;
+    temp_dest = total++;
+    north = total++;
+    east = total++;
+    south = total++;
+    west = total++;
+    nodeCount = total;
   }
 
   class XYZ {
@@ -115,8 +119,9 @@ public class IntegrityChunk implements Serializable {
     for (int y = 0; y < 256; y++) {
       for (int x = 0; x < 16; x++) {
         for (int z = 0; z < 16; z++) {
-          BlockData block = chunk.getBlockData(x, y, z);
-          EnumMap<IntegrityData, Integer> data = getStructuralData(block);
+          Material material = chunk.getBlockData(x, y, z).getMaterial();
+          snapshot[new XYZ(x, y, z).index] = material;
+          EnumMap<IntegrityData, Integer> data = getStructuralData(material);
           if (data == null) continue;
           createVertex(x, y, z, data);
         }
@@ -135,37 +140,42 @@ public class IntegrityChunk implements Serializable {
     worldName = liveChunk.getWorld().getName();
     graph = MaxFlow.createGraph(nodeCount);
     dist = new int[nodeCount];
+    snapshot = new Material[chunkSize];
     ChunkSnapshot chunk = liveChunk.getChunkSnapshot();
     initGraph(chunk);
   }
 
   /** Update chunk with added / removed blocks */
-  void update(Iterable<Block> blocks) {
+  void update(ChunkSnapshot newSnapshot) {
     List<int[]> toChange = new ArrayList<>();
-    for (Block block : blocks) {
-      Location loc = block.getLocation().subtract(this.getBlockX(), 0, this.getBlockZ());
-      int index = new XYZ(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()).index;
-      EnumMap<IntegrityData, Integer> data = getStructuralData(block.getBlockData());
+    for (int index = 0; index < snapshot.length; index++) {
+      XYZ loc = new XYZ(index);
+      Material newMaterial = newSnapshot.getBlockType(loc.x, loc.y, loc.z);
+      Material oldMaterial = snapshot[index];
+      // Update snapshot
+      snapshot[index] = newMaterial;
+      // If there is no structural change, do nothing
+      if (newMaterial == oldMaterial) continue;
+      if (!isStructural(oldMaterial) && !isStructural(newMaterial)) continue;
+      // Change edge weights to the new data
+      EnumMap<IntegrityData, Integer> data = getStructuralData(newMaterial);
       Map<IntegrityData, int[]> blockEdges = new HashMap<>();
       for (int e = 0; e < graph[index].size(); e++) {
         Edge edge = graph[index].get(e);
         blockEdges.put(edge.tag, new int[] {index, e, edge.cap});
       }
-      // If block does not already exist add it
-      if (blockEdges.size() == 0) {
-        createVertex(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), data);
-        continue;
-      }
-      // If it does, queue edges to be changed with new capacities
+      // Record edge weights to be changed
       for (IntegrityData edgeType : data.keySet()) {
         int[] current = blockEdges.get(edgeType);
         // Note edges on the side of chunks may not exist
         // TODO: Change for multichunk ops
+        // TODO: Actually check if individual edge should be added..?
         if (current == null) continue;
         current[2] = data.get(edgeType);
       }
       toChange.addAll(blockEdges.values());
     }
+    // Run super cool algorithm
     MaxFlow.changeEdges(graph, dist, src, dest, toChange, temp_src, temp_dest);
   }
 
@@ -214,12 +224,15 @@ public class IntegrityChunk implements Serializable {
             });
   }
 
-  static final EnumMap<IntegrityData, Integer> getStructuralData(BlockData block) {
-    Material material = block.getMaterial();
-    if (!material.isSolid()) return null;
+  static EnumMap<IntegrityData, Integer> getStructuralData(Material material) {
+    if (!isStructural(material)) return Config.Instance().getBlockData().getEmpty();
     EnumMap<IntegrityData, Integer> data = Config.Instance().getBlockData().getData(material);
     if (data == null) return Config.Instance().getBlockData().getDefault();
     return data;
+  }
+
+  static boolean isStructural(Material material) {
+    return material.isSolid();
   }
 
   public int getX() {

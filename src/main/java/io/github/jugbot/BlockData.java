@@ -11,6 +11,7 @@ import org.bukkit.configuration.serialization.ConfigurationSerializable;
 public class BlockData implements ConfigurationSerializable {
   Map<Material, EnumMap<IntegrityData, Integer>> blocks;
   EnumMap<IntegrityData, Integer> defaultBlock;
+  EnumMap<IntegrityData, Integer> emptyBlock;
 
   BlockData() {
     blocks = new HashMap<Material, EnumMap<IntegrityData, Integer>>();
@@ -61,6 +62,20 @@ public class BlockData implements ConfigurationSerializable {
 
   public EnumMap<IntegrityData, Integer> getData(Material material) {
     return blocks.get(material);
+  }
+
+  public EnumMap<IntegrityData, Integer> getEmpty() {
+    if (emptyBlock == null) {
+      emptyBlock = new EnumMap(IntegrityData.class);
+      emptyBlock.put(IntegrityData.MASS, 0);
+      emptyBlock.put(IntegrityData.UP, 0);
+      emptyBlock.put(IntegrityData.DOWN, 0);
+      emptyBlock.put(IntegrityData.NORTH, 0);
+      emptyBlock.put(IntegrityData.EAST, 0);
+      emptyBlock.put(IntegrityData.SOUTH, 0);
+      emptyBlock.put(IntegrityData.WEST, 0);
+    }
+    return emptyBlock;
   }
 
   public EnumMap<IntegrityData, Integer> getDefault() {

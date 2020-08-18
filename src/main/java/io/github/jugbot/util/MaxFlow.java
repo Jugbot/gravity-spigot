@@ -34,15 +34,32 @@ public class MaxFlow {
     graph[v].add(new Edge(u, graph[u].size() - 1, 0, null));
   }
 
-  private static void deleteEdge(List<Edge>[] graph, int u, int e) {
-    Edge edge = graph[u].remove(e);
-    graph[edge.t].remove(edge.rev);
+  private static Edge deleteEdge(List<Edge>[] graph, int u, int e) {
+    int eLast = graph[u].size() - 1;
+    if (e != eLast) {
+      Edge edge = graph[u].set(e, graph[u].get(eLast));
+      Edge fixme = graph[u].remove(eLast);
+      graph[fixme.t].get(fixme.rev).rev = e;
+      return edge;
+    } else {
+      return graph[u].remove(e);
+    }
+  }
+
+  private static void deleteEdgePair(List<Edge>[] graph, int u, int e) {
+    Edge edge = deleteEdge(graph, u, e);
+    deleteEdge(graph, edge.t, edge.rev);
   }
 
   private static void deleteEdges(List<Edge>[] graph, int u) {
-    for (int i = graph[u].size() - 1; i >= 0; i--) {
-      if (graph[u].get(i).cap == 0) continue;
-      deleteEdge(graph, u, i);
+    while (!graph[u].isEmpty()) {
+      deleteEdgePair(graph, u, graph[u].size() - 1);
+    }
+  }
+
+  private static void deleteVertexEdges(List<Edge>[] graph, Iterable<Integer> vertices) {
+    for (int u : vertices) {
+      deleteEdges(graph, u);
     }
   }
 
@@ -85,7 +102,7 @@ public class MaxFlow {
     createEdge(graph, s, t, Integer.MAX_VALUE);
     int final_flow = MaxFlow.maxFlow(graph, dist, temp_s, temp_t);
     assert final_flow == df : ("final_flow: " + final_flow + " should be " + df);
-    deleteEdge(graph, s, graph[s].size() - 1);
+    deleteEdgePair(graph, s, graph[s].size() - 1);
     // Probably harmless but delete edges anyways
     deleteEdges(graph, temp_s);
     deleteEdges(graph, temp_t);
@@ -144,7 +161,7 @@ public class MaxFlow {
     for (Edge e : graph[src]) {
       int u = e.t;
       int level = dist[u];
-      if (level > 0 && level != dest) {
+      if (level > 0) {
         result.add(u);
       }
     }
