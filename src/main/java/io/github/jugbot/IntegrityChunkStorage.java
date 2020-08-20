@@ -58,6 +58,7 @@ public class IntegrityChunkStorage {
   }
 
   public void saveChunk(IntegrityChunk chunk) {
+    System.out.println("Save Chunk");
     try {
       PreparedStatement statement = connection.prepareStatement(WRITE_SQL);
       statement.setString(1, chunk.getWorldName());
@@ -74,6 +75,7 @@ public class IntegrityChunkStorage {
   }
 
   public IntegrityChunk loadChunk(String worldName, int x, int z) {
+    System.out.println("Load Chunk");
     try {
       PreparedStatement statement = connection.prepareStatement(READ_SQL);
       statement.setString(1, worldName);

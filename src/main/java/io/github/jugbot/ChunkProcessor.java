@@ -15,6 +15,8 @@ import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 
+import io.github.jugbot.util.AsyncBukkit;
+
 /**
  * Takes block changes and outputs offending blocks that should fall asynchronously Note reported blocks may be in other
  * chunks
@@ -61,8 +63,18 @@ public class ChunkProcessor {
     IntegrityChunk integrityChunk = loadedChunks.remove(chunk);
     if (integrityChunk != null) {
       IntegrityChunkStorage.Instance().saveChunk(integrityChunk);
+      System.out.println("Unloaded Chunk " + chunk.toString());
     }
-    System.out.println("Unloaded Chunk " + chunk.toString());
+  }
+
+  public IntegrityChunk getChunk(Chunk chunk) {
+    IntegrityChunk integrityChunk = loadedChunks.get(chunk);
+    if (integrityChunk == null) {
+      System.out.println("Chunk not loaded! " + chunk.toString());
+      loadChunk(chunk);
+      integrityChunk = loadedChunks.get(chunk);
+    }
+    return integrityChunk;
   }
 
   public void processBlock(Block block) {
@@ -73,12 +85,12 @@ public class ChunkProcessor {
       chunkUpdateQueue.put(chunk, blocks);
     }
     blocks.add(block);
-    // Currently just launch a thread whenever there are changes but maybe there is a better way
+    // Currently just launch a thread whenever there are changes but maybe there is
+    // a better way
     processChunks();
   }
 
   private void processChunks() {
-    // Make set of dirty chunks that are not being processed
     Map<Chunk, List<Block>> shouldUpdate = new HashMap<>(chunkUpdateQueue);
     shouldUpdate.keySet().removeAll(inProgress);
     // Remove chunks to operate from update queue
@@ -87,31 +99,24 @@ public class ChunkProcessor {
     inProgress.addAll(shouldUpdate.keySet());
 
     for (Chunk chunk : shouldUpdate.keySet()) {
-      // TODO: Parallelize this
-      IntegrityChunk integrityChunk = loadedChunks.get(chunk);
-      // Just in case
-      if (integrityChunk == null) {
-        System.out.println("Chunk not loaded! " + chunk.toString());
-        loadChunk(chunk);
-        integrityChunk = loadedChunks.get(chunk);
-      }
-      // Update integrity
-      integrityChunk.update(shouldUpdate.get(chunk));
-      // Thread & Callback
-      integrityChunk.getBrokenBlocks(
-          new IntegrityChunk.Callback<Location[]>() {
-            @Override
-            public void done(Location[] locations) {
-              // Mark chunk as free
-              inProgress.remove(chunk);
-              Block[] blocks = Arrays.asList(locations).stream().map(loc -> loc.getBlock()).toArray(Block[]::new);
-              // Call gravity event on blocks in chunk
-              Bukkit.getPluginManager().callEvent(new BlockGravityEvent(blocks));
-              System.out.println("Thread Finished");
-              System.out.println("Blocks to fall: " + blocks.length);
-            }
+      AsyncBukkit.doTask(
+          () -> {
+            System.out.println("Thread Started");
+            IntegrityChunk integrityChunk = getChunk(chunk);
+            // Update integrity
+            integrityChunk.update(chunk.getChunkSnapshot());
+            // Thread & Callback
+            return integrityChunk.getIntegrityViolations();
+          },
+          (Location[] locations) -> {
+            // Mark chunk as free
+            inProgress.remove(chunk);
+            Block[] blocks = Arrays.asList(locations).stream().map(loc -> loc.getBlock()).toArray(Block[]::new);
+            // Call gravity event on blocks in chunk
+            Bukkit.getPluginManager().callEvent(new BlockGravityEvent(blocks));
+            System.out.println("Thread Finished");
+            System.out.println("Blocks to fall: " + blocks.length);
           });
-      System.out.println("Thread Started");
     }
   }
 }
