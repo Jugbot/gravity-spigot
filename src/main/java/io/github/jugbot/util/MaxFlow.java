@@ -30,8 +30,7 @@ public class MaxFlow {
 
   public static List<Edge>[] createGraph(int nodes) {
     List<Edge>[] graph = new List[nodes];
-    for (int i = 0; i < nodes; i++)
-      graph[i] = new ArrayList<>(Collections.nCopies(IntegrityData.values().length, null));
+    for (int i = 0; i < nodes; i++) graph[i] = new ArrayList<>();
     return graph;
   }
 
@@ -41,41 +40,39 @@ public class MaxFlow {
 
   public static Edge createEdge(List<Edge>[] graph, int u, int v, int cap, IntegrityData tag) {
     Edge edge;
+    assert tag == null;
     if (tag == null) {
       edge = new Edge(v, graph[v].size(), cap);
       graph[u].add(edge);
       graph[v].add(new Edge(u, graph[u].size() - 1, 0));
     } else if (tag == IntegrityData.MASS) {
-      edge = new Edge(v, graph[v].size(), cap);
-      graph[u].set(tag.ordinal(), edge);
-      graph[v].add(new Edge(u, tag.ordinal(), 0));
+      // from src to edge mass slot
+      edge = new Edge(v, tag.ordinal(), cap);
+      graph[u].add(edge);
+      graph[v].set(tag.ordinal(), new Edge(u, graph[u].size() - 1, 0));
     } else {
-      edge = new Edge(v, tag.opposite().ordinal(), cap);
+      int rev = tag.opposite().ordinal();
+      edge = new Edge(v, rev, cap);
       graph[u].set(tag.ordinal(), edge);
-      if (graph[v].get(tag.opposite().ordinal()) == null) {
-        graph[v].set(tag.opposite().ordinal(), new Edge(u, tag.ordinal(), 0));
+      if (graph[v].get(rev) == null) {
+        graph[v].set(rev, new Edge(u, tag.ordinal(), 0));
       }
     }
     return edge;
   }
 
   private static Edge deleteEdge(List<Edge>[] graph, int u, int e) {
-    if (e < IntegrityData.values().length) {
-      // do not free reserved slot
-      return graph[u].set(e, null);
+    // remove from list
+    int eLast = graph[u].size() - 1;
+    if (e < eLast) {
+      // shorten array
+      Edge edge = graph[u].set(e, graph[u].get(eLast));
+      Edge fixme = graph[u].remove(eLast);
+      graph[fixme.t].get(fixme.rev).rev = e;
+      return edge;
     } else {
-      // remove from list
-      int eLast = graph[u].size() - 1;
-      if (e < eLast) {
-        // shorten array
-        Edge edge = graph[u].set(e, graph[u].get(eLast));
-        Edge fixme = graph[u].remove(eLast);
-        graph[fixme.t].get(fixme.rev).rev = e;
-        return edge;
-      } else {
-        // remove last
-        return graph[u].remove(e);
-      }
+      // remove last
+      return graph[u].remove(e);
     }
   }
 
@@ -121,6 +118,7 @@ public class MaxFlow {
       assert existing != null : "Edge does not exist!";
       // Check if flow should be reduced
       if (existing.f > cap) {
+        System.out.println("fix edge");
         int df = existing.f - cap;
         existing.f = cap;
         graph[existing.t].get(existing.rev).f = -cap;
@@ -135,10 +133,12 @@ public class MaxFlow {
     // If all flow reductions are satisfied, return
     int df = max_flow - MaxFlow.maxFlow(graph, dist, temp_s, temp_t);
     if (df == 0) {
+      System.out.println("no flows fixed");
       deleteEdgePairs(graph, temp_s);
       deleteEdgePairs(graph, temp_t);
       return MaxFlow.maxFlow(graph, dist, s, t);
     }
+    System.out.println("fix flow");
     // Else reduce flow on entire graph
     createEdge(graph, s, t, Integer.MAX_VALUE);
     int final_flow = MaxFlow.maxFlow(graph, dist, temp_s, temp_t);
@@ -152,7 +152,7 @@ public class MaxFlow {
     return -final_flow;
   }
 
-  static boolean dinicBfs(List<Edge>[] graph, int src, int dest, int[] dist) {
+  public static boolean dinicBfs(List<Edge>[] graph, int src, int dest, int[] dist) {
     Arrays.fill(dist, -1);
     dist[src] = 0;
     int[] Q = new int[graph.length];
@@ -179,6 +179,10 @@ public class MaxFlow {
       if (dist[e.t] == dist[u] + 1 && e.f < e.cap) {
         int df = dinicDfs(graph, ptr, dist, dest, e.t, Math.min(f, e.cap - e.f));
         if (df > 0) {
+          // int y = u % 256;
+          // int z = u / 256 % 16;
+          // int x = u / 256 / 16;
+          // System.out.println(x + " " + y + " " + z);
           e.f += df;
           graph[e.t].get(e.rev).f -= df;
           return df;
@@ -195,6 +199,7 @@ public class MaxFlow {
       int[] ptr = new int[graph.length];
       while (true) {
         int df = dinicDfs(graph, ptr, dist, dest, src, Integer.MAX_VALUE);
+        // System.out.println("flow " + df);
         if (df == 0) break;
         flow += df;
       }
@@ -208,7 +213,7 @@ public class MaxFlow {
       if (e == null) continue;
       int u = e.t;
       int level = dist[u];
-      if (level > 0) {
+      if (level > 0 && e.cap > 0) {
         result.add(u);
       }
     }

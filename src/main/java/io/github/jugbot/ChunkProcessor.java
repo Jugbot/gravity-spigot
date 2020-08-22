@@ -84,6 +84,7 @@ public class ChunkProcessor {
       blocks = new ArrayList<>();
       chunkUpdateQueue.put(chunk, blocks);
     }
+    // TODO change back to regular set
     blocks.add(block);
     // Currently just launch a thread whenever there are changes but maybe there is
     // a better way
@@ -104,7 +105,8 @@ public class ChunkProcessor {
             System.out.println("Thread Started");
             IntegrityChunk integrityChunk = getChunk(chunk);
             // Update integrity
-            integrityChunk.update(chunk.getChunkSnapshot());
+            // integrityChunk.update(chunk.getChunkSnapshot());
+            integrityChunk = new IntegrityChunk(chunk);
             // Thread & Callback
             return integrityChunk.getIntegrityViolations();
           },
