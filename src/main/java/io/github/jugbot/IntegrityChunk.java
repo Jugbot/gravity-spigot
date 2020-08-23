@@ -83,30 +83,30 @@ public class IntegrityChunk implements Serializable {
     XYZ from = new XYZ(x, y, z);
     if (y != 0) {
       XYZ to = new XYZ(x, y - 1, z);
-      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.DOWN));
+      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.DOWN), IntegrityData.DOWN);
     }
     if (y != 255) {
       XYZ to = new XYZ(x, y + 1, z);
-      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.UP));
+      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.UP), IntegrityData.UP);
     }
     if (x != 0) {
       XYZ to = new XYZ(x - 1, y, z);
-      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.WEST));
+      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.WEST), IntegrityData.WEST);
     }
     if (x != 15) {
       XYZ to = new XYZ(x + 1, y, z);
-      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.EAST));
+      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.EAST), IntegrityData.EAST);
     }
     if (z != 0) {
       XYZ to = new XYZ(x, y, z - 1);
-      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.NORTH));
+      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.NORTH), IntegrityData.NORTH);
     }
     if (z != 15) {
       XYZ to = new XYZ(x, y, z + 1);
-      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.SOUTH));
+      MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.SOUTH), IntegrityData.SOUTH);
     }
     // Add edge from source to block with capacity of block weight
-    MaxFlow.createEdge(graph, src, from.index, data.get(IntegrityData.MASS));
+    MaxFlow.createEdge(graph, src, from.index, data.get(IntegrityData.MASS), IntegrityData.MASS);
     // Blocks on the bottom row will connect to the sink
     if (y == 0) {
       MaxFlow.createEdge(graph, from.index, dest, Integer.MAX_VALUE);
@@ -123,17 +123,12 @@ public class IntegrityChunk implements Serializable {
           Material material = chunk.getBlockData(x, y, z).getMaterial();
           int index = new XYZ(x, y, z).index;
           snapshot[index] = material;
-          graph[index] = new ArrayList<>(); // REMOVE?
           EnumMap<IntegrityData, Integer> data = getStructuralData(material);
           if (data == null) continue;
           createVertex(graph, x, y, z, data);
         }
       }
     }
-  }
-
-  IntegrityChunk(World world, int x, int z) {
-    this(world.getChunkAt(x, z));
   }
 
   IntegrityChunk(Chunk liveChunk) {
@@ -148,7 +143,7 @@ public class IntegrityChunk implements Serializable {
     initGraph(chunk);
   }
 
-  /** Update chunk with added / removed blocks */
+  /** Update chunk with added / removed blocks Significant speed improvement compared to re-creation */
   void update(ChunkSnapshot newSnapshot) {
     List<int[]> toChange = new ArrayList<>();
     for (int index = 0; index < snapshot.length; index++) {
@@ -164,9 +159,6 @@ public class IntegrityChunk implements Serializable {
           "Change from " + oldMaterial + " to " + newMaterial + " at " + loc.x + ", " + loc.y + ", " + loc.z);
       // Change edge weights to the new data
       EnumMap<IntegrityData, Integer> data = getStructuralData(newMaterial);
-      if (data == null) {
-        assert false;
-      }
       // Record edge weights to be changed
       for (IntegrityData edgeType : data.keySet()) {
         // Existing edge / vertex may not exist
@@ -181,7 +173,7 @@ public class IntegrityChunk implements Serializable {
     MaxFlow.changeEdges(graph, dist, src, dest, toChange, temp_src, temp_dest);
     // Run for edges whoes capacities were set to zero
     // Will only remove if augment capacity is also zero.
-    MaxFlow.pruneEdges(graph, dist, src, dest, toChange);
+    // MaxFlow.pruneEdges(graph, dist, src, dest, toChange);
   }
 
   /** Called Asynchronously */

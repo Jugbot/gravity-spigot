@@ -105,8 +105,8 @@ public class ChunkProcessor {
             System.out.println("Thread Started");
             IntegrityChunk integrityChunk = getChunk(chunk);
             // Update integrity
-            // integrityChunk.update(chunk.getChunkSnapshot());
-            integrityChunk = new IntegrityChunk(chunk);
+            integrityChunk.update(chunk.getChunkSnapshot());
+            // integrityChunk = new IntegrityChunk(chunk);
             // Thread & Callback
             return integrityChunk.getIntegrityViolations();
           },

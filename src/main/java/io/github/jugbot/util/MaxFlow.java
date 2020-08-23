@@ -30,7 +30,8 @@ public class MaxFlow {
 
   public static List<Edge>[] createGraph(int nodes) {
     List<Edge>[] graph = new List[nodes];
-    for (int i = 0; i < nodes; i++) graph[i] = new ArrayList<>();
+    for (int i = 0; i < nodes; i++)
+      graph[i] = new ArrayList<>(Collections.nCopies(IntegrityData.values().length, null));
     return graph;
   }
 
@@ -40,7 +41,6 @@ public class MaxFlow {
 
   public static Edge createEdge(List<Edge>[] graph, int u, int v, int cap, IntegrityData tag) {
     Edge edge;
-    assert tag == null;
     if (tag == null) {
       edge = new Edge(v, graph[v].size(), cap);
       graph[u].add(edge);
@@ -62,22 +62,30 @@ public class MaxFlow {
   }
 
   private static Edge deleteEdge(List<Edge>[] graph, int u, int e) {
-    // remove from list
-    int eLast = graph[u].size() - 1;
-    if (e < eLast) {
-      // shorten array
-      Edge edge = graph[u].set(e, graph[u].get(eLast));
-      Edge fixme = graph[u].remove(eLast);
-      graph[fixme.t].get(fixme.rev).rev = e;
-      return edge;
+    if (e < IntegrityData.values().length) {
+      // do not free reserved slot
+      return graph[u].set(e, null);
     } else {
-      // remove last
-      return graph[u].remove(e);
+      // remove from list
+      int eLast = graph[u].size() - 1;
+      if (e < eLast) {
+        // shorten array
+        Edge edge = graph[u].set(e, graph[u].get(eLast));
+        Edge fixme = graph[u].remove(eLast);
+        graph[fixme.t].get(fixme.rev).rev = e;
+        return edge;
+      } else {
+        // remove last
+        return graph[u].remove(e);
+      }
     }
   }
 
   private static void deleteEdgePair(List<Edge>[] graph, int u, int e) {
-    if (graph[u].get(e) == null) return;
+    if (graph[u].get(e) == null) {
+      System.out.println("Null edge not deleted");
+      return;
+    }
     Edge edge = deleteEdge(graph, u, e);
     deleteEdge(graph, edge.t, edge.rev);
   }
@@ -133,7 +141,7 @@ public class MaxFlow {
     // If all flow reductions are satisfied, return
     int df = max_flow - MaxFlow.maxFlow(graph, dist, temp_s, temp_t);
     if (df == 0) {
-      System.out.println("no flows fixed");
+      System.out.println("no flow fixing");
       deleteEdgePairs(graph, temp_s);
       deleteEdgePairs(graph, temp_t);
       return MaxFlow.maxFlow(graph, dist, s, t);
