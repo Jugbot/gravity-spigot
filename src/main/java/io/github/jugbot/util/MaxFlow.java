@@ -176,7 +176,7 @@ public class MaxFlow {
         }
       }
     }
-    return dist[dest] >= 0;
+    return dist[dest] > -1;
   }
 
   static int dinicDfs(List<Edge>[] graph, int[] ptr, int[] dist, int dest, int u, int f) {
@@ -204,7 +204,8 @@ public class MaxFlow {
     assert src != dest : "Source vertex cannot be the same as the destination!";
     int flow = 0;
     while (dinicBfs(graph, src, dest, dist)) {
-      int[] ptr = new int[graph.length];
+      List<Integer> loc = getOffendingVertices(graph, dist, src, dest);
+      int[] ptr = new int[graph.length]; // keeps track of visited edges per vertex
       while (true) {
         int df = dinicDfs(graph, ptr, dist, dest, src, Integer.MAX_VALUE);
         // System.out.println("flow " + df);

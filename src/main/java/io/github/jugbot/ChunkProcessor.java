@@ -67,6 +67,10 @@ public class ChunkProcessor {
     }
   }
 
+  public void debugResetChunk(Chunk chunk) {
+    loadedChunks.put(chunk, new IntegrityChunk(chunk));
+  }
+
   public IntegrityChunk getChunk(Chunk chunk) {
     IntegrityChunk integrityChunk = loadedChunks.get(chunk);
     if (integrityChunk == null) {

@@ -2,3 +2,9 @@ name: Gravity
 version: 1.0
 api-version: 1.16
 main: io.github.jugbot.App
+commands:
+  gravity:
+    description: Gravity
+    usage: /gr <command>
+    permission: gravity.admin
+    aliases: [gr]
