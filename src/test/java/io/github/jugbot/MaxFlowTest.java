@@ -54,27 +54,39 @@ public class MaxFlowTest {
     System.out.println("[ " + info.getCurrentRepetition() + " ] " + seed);
     // seed = -62000569186895826L;
     random.setSeed(seed);
-    final int MODIFIER = 256 * 16;
+    final int MODIFIER = 16 * 256;
     final int V = 16 * 16 * 256 / MODIFIER + 2;
     final int E = V * 4;
 
-    List<MaxFlow.Edge>[] graph = MaxFlow.createGraph(V);
+    List<MaxFlow.Edge>[] graphA = MaxFlow.createGraph(V);
+    List<MaxFlow.Edge>[] graphB = MaxFlow.createGraph(V);
 
     for (int i = 0; i < E; i++) {
       int u = random.nextInt(V - 2);
       int v = random.nextInt(V - 2);
       int cap = random.nextInt(42);
-      if (random.nextFloat() < 0.7) {
-        MaxFlow.createEdge(graph, u, v, cap, randomEnum(random, IntegrityData.class));
+      IntegrityData state = randomEnum(random, IntegrityData.class);
+      if (random.nextFloat() < 0.7
+          && graphA[u].get(state.ordinal()) == null
+          && (state == IntegrityData.MASS || graphA[v].get(state.opposite().ordinal()) == null)) {
+        MaxFlow.createEdge(graphA, u, v, cap, state);
       } else {
-        MaxFlow.createEdge(graph, u, v, cap);
+        MaxFlow.createEdge(graphA, u, v, cap);
       }
+      MaxFlow.createEdge(graphB, u, v, cap);
     }
-    int[] dist = new int[V];
+    int[] distA = new int[V];
+    int[] distB = new int[V];
     int s = random.nextInt(V - 1 - 2);
     int t = s + 1;
     System.out.println(s + "s " + t + "t");
-    MaxFlow.maxFlow(graph, dist, s, t);
+    MaxFlow.dinicBfs(graphA, s, t, distA);
+    MaxFlow.dinicBfs(graphB, s, t, distB);
+    int difference = differences(distA, distB);
+    assertTrue(difference == 0, "Vertex level array is not equivalent! " + difference + " differences.");
+    int resultA = MaxFlow.maxFlow(graphA, distA, s, t);
+    int resultB = MaxFlow.maxFlow(graphB, distB, s, t);
+    assertTrue(resultA == resultB, resultA + " != " + resultB);
   }
 
   @RepeatedTest(10)
@@ -166,13 +178,5 @@ public class MaxFlowTest {
       }
       System.out.println();
     }
-  }
-
-  public void updatesEdgesIntegrityData(RepetitionInfo info) {
-    Random random = new Random();
-    long seed = random.nextLong();
-    System.out.println("[ " + info.getCurrentRepetition() + " ] " + seed);
-    // seed = 1280261209857013058L;
-    random.setSeed(seed);
   }
 }

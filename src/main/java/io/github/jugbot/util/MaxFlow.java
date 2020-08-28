@@ -18,10 +18,10 @@ public class MaxFlow {
   public static class Edge implements Serializable {
     public int t;
     public int rev;
-    public int cap;
-    public int f;
+    public float cap;
+    public float f;
 
-    public Edge(int t, int rev, int cap) {
+    public Edge(int t, int rev, float cap) {
       this.t = t;
       this.rev = rev;
       this.cap = cap;
@@ -35,25 +35,27 @@ public class MaxFlow {
     return graph;
   }
 
-  public static Edge createEdge(List<Edge>[] graph, int u, int v, int cap) {
+  public static Edge createEdge(List<Edge>[] graph, int u, int v, float cap) {
     return createEdge(graph, u, v, cap, null);
   }
 
-  public static Edge createEdge(List<Edge>[] graph, int u, int v, int cap, IntegrityData tag) {
+  public static Edge createEdge(List<Edge>[] graph, int u, int v, float cap, IntegrityData tag) {
     Edge edge;
     if (tag == null) {
       edge = new Edge(v, graph[v].size(), cap);
       graph[u].add(edge);
       graph[v].add(new Edge(u, graph[u].size() - 1, 0));
     } else if (tag == IntegrityData.MASS) {
-      edge = new Edge(v, graph[v].size(), cap);
-      graph[u].set(tag.ordinal(), edge);
-      graph[v].add(new Edge(u, tag.ordinal(), 0));
+      // from src to edge mass slot
+      edge = new Edge(v, tag.ordinal(), cap);
+      graph[u].add(edge);
+      graph[v].set(tag.ordinal(), new Edge(u, graph[u].size() - 1, 0));
     } else {
-      edge = new Edge(v, tag.opposite().ordinal(), cap);
+      int rev = tag.opposite().ordinal();
+      edge = new Edge(v, rev, cap);
       graph[u].set(tag.ordinal(), edge);
-      if (graph[v].get(tag.opposite().ordinal()) == null) {
-        graph[v].set(tag.opposite().ordinal(), new Edge(u, tag.ordinal(), 0));
+      if (graph[v].get(rev) == null) {
+        graph[v].set(rev, new Edge(u, tag.ordinal(), 0));
       }
     }
     return edge;
@@ -80,7 +82,9 @@ public class MaxFlow {
   }
 
   private static void deleteEdgePair(List<Edge>[] graph, int u, int e) {
-    if (graph[u].get(e) == null) return;
+    if (graph[u].get(e) == null) {
+      return;
+    }
     Edge edge = deleteEdge(graph, u, e);
     deleteEdge(graph, edge.t, edge.rev);
   }
@@ -121,7 +125,7 @@ public class MaxFlow {
       assert existing != null : "Edge does not exist!";
       // Check if flow should be reduced
       if (existing.f > cap) {
-        int df = existing.f - cap;
+        float df = existing.f - cap;
         existing.f = cap;
         graph[existing.t].get(existing.rev).f = -cap;
         // Create temp edge to rebalance edges later
@@ -152,7 +156,7 @@ public class MaxFlow {
     return -final_flow;
   }
 
-  static boolean dinicBfs(List<Edge>[] graph, int src, int dest, int[] dist) {
+  public static boolean dinicBfs(List<Edge>[] graph, int src, int dest, int[] dist) {
     Arrays.fill(dist, -1);
     dist[src] = 0;
     int[] Q = new int[graph.length];
@@ -168,16 +172,16 @@ public class MaxFlow {
         }
       }
     }
-    return dist[dest] >= 0;
+    return dist[dest] > -1;
   }
 
-  static int dinicDfs(List<Edge>[] graph, int[] ptr, int[] dist, int dest, int u, int f) {
+  static float dinicDfs(List<Edge>[] graph, int[] ptr, int[] dist, int dest, int u, float f) {
     if (u == dest) return f;
     for (; ptr[u] < graph[u].size(); ++ptr[u]) {
       Edge e = graph[u].get(ptr[u]);
       if (e == null) continue;
       if (dist[e.t] == dist[u] + 1 && e.f < e.cap) {
-        int df = dinicDfs(graph, ptr, dist, dest, e.t, Math.min(f, e.cap - e.f));
+        float df = dinicDfs(graph, ptr, dist, dest, e.t, Math.min(f, e.cap - e.f));
         if (df > 0) {
           e.f += df;
           graph[e.t].get(e.rev).f -= df;
@@ -192,9 +196,10 @@ public class MaxFlow {
     assert src != dest : "Source vertex cannot be the same as the destination!";
     int flow = 0;
     while (dinicBfs(graph, src, dest, dist)) {
-      int[] ptr = new int[graph.length];
+      List<Integer> loc = getOffendingVertices(graph, dist, src, dest);
+      int[] ptr = new int[graph.length]; // keeps track of visited edges per vertex
       while (true) {
-        int df = dinicDfs(graph, ptr, dist, dest, src, Integer.MAX_VALUE);
+        float df = dinicDfs(graph, ptr, dist, dest, src, Float.POSITIVE_INFINITY);
         if (df == 0) break;
         flow += df;
       }
@@ -203,12 +208,13 @@ public class MaxFlow {
   }
 
   public static List<Integer> getOffendingVertices(List<Edge>[] graph, int[] dist, int src, int dest) {
+    dinicBfs(graph, src, dest, dist);
     List<Integer> result = new ArrayList<>();
     for (Edge e : graph[src]) {
       if (e == null) continue;
       int u = e.t;
       int level = dist[u];
-      if (level > 0) {
+      if (level > 0 && e.cap > 0) {
         result.add(u);
       }
     }

@@ -57,18 +57,18 @@ public class IntegrityChunk implements Serializable {
     nodeCount = total;
   }
 
-  private static class XYZ {
+  public static class XYZ {
     public int x, y, z;
     public int index;
 
-    XYZ(int x, int y, int z) {
+    public XYZ(int x, int y, int z) {
       this.x = x;
       this.z = z;
       this.y = y;
       this.index = x * 16 * 256 + z * 256 + y;
     }
 
-    XYZ(int index) {
+    public XYZ(int index) {
       this.index = index;
       this.y = index % 256;
       index /= 256;
@@ -106,10 +106,10 @@ public class IntegrityChunk implements Serializable {
       MaxFlow.createEdge(graph, from.index, to.index, data.get(IntegrityData.SOUTH), IntegrityData.SOUTH);
     }
     // Add edge from source to block with capacity of block weight
-    MaxFlow.createEdge(graph, src, from.index, data.get(IntegrityData.MASS), null);
+    MaxFlow.createEdge(graph, src, from.index, data.get(IntegrityData.MASS), IntegrityData.MASS);
     // Blocks on the bottom row will connect to the sink
     if (y == 0) {
-      MaxFlow.createEdge(graph, from.index, dest, Integer.MAX_VALUE, null);
+      MaxFlow.createEdge(graph, from.index, dest, Integer.MAX_VALUE);
     }
   }
 
@@ -121,17 +121,14 @@ public class IntegrityChunk implements Serializable {
       for (int x = 0; x < 16; x++) {
         for (int z = 0; z < 16; z++) {
           Material material = chunk.getBlockData(x, y, z).getMaterial();
-          snapshot[new XYZ(x, y, z).index] = material;
+          int index = new XYZ(x, y, z).index;
+          snapshot[index] = material;
           EnumMap<IntegrityData, Integer> data = getStructuralData(material);
           if (data == null) continue;
           createVertex(graph, x, y, z, data);
         }
       }
     }
-  }
-
-  IntegrityChunk(World world, int x, int z) {
-    this(world.getChunkAt(x, z));
   }
 
   IntegrityChunk(Chunk liveChunk) {
@@ -146,7 +143,7 @@ public class IntegrityChunk implements Serializable {
     initGraph(chunk);
   }
 
-  /** Update chunk with added / removed blocks */
+  /** Update chunk with added / removed blocks Significant speed improvement compared to re-creation */
   void update(ChunkSnapshot newSnapshot) {
     List<int[]> toChange = new ArrayList<>();
     for (int index = 0; index < snapshot.length; index++) {
@@ -162,27 +159,29 @@ public class IntegrityChunk implements Serializable {
           "Change from " + oldMaterial + " to " + newMaterial + " at " + loc.x + ", " + loc.y + ", " + loc.z);
       // Change edge weights to the new data
       EnumMap<IntegrityData, Integer> data = getStructuralData(newMaterial);
-      if (data == null) {
-        //
-      }
       // Record edge weights to be changed
       for (IntegrityData edgeType : data.keySet()) {
         // Existing edge / vertex may not exist
-        if (graph[index].get(edgeType.ordinal()) == null) continue;
-        toChange.add(new int[] {index, edgeType.ordinal(), data.get(edgeType)});
+        if (graph[index].get(edgeType.ordinal()) == null) {
+          System.out.println("Null edge: " + edgeType);
+          continue;
+        }
+        if (edgeType == IntegrityData.MASS) {
+          toChange.add(new int[] {src, graph[index].get(edgeType.ordinal()).rev, data.get(edgeType)});
+        } else {
+          toChange.add(new int[] {index, edgeType.ordinal(), data.get(edgeType)});
+        }
       }
     }
     // Run super cool algorithm
     MaxFlow.changeEdges(graph, dist, src, dest, toChange, temp_src, temp_dest);
     // Run for edges whoes capacities were set to zero
     // Will only remove if augment capacity is also zero.
-    MaxFlow.pruneEdges(graph, dist, src, dest, toChange);
+    // MaxFlow.pruneEdges(graph, dist, src, dest, toChange);
   }
 
   /** Called Asynchronously */
   public Location[] getIntegrityViolations() {
-    // Run Max Flow and get nodes to remove
-    MaxFlow.maxFlow(graph, dist, src, dest);
     List<Integer> offending = MaxFlow.getOffendingVertices(graph, dist, src, dest);
     // Translate vertices to Blocks w/ Locations
     Location[] blocks = new Location[offending.size()];
@@ -227,5 +226,9 @@ public class IntegrityChunk implements Serializable {
 
   public String getWorldName() {
     return worldName;
+  }
+
+  public List<Edge> debugGetEdgesAt(Block block) {
+    return graph[new XYZ(block.getX() - getBlockX(), block.getY(), block.getZ() - getBlockZ()).index];
   }
 }
