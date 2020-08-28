@@ -57,18 +57,18 @@ public class IntegrityChunk implements Serializable {
     nodeCount = total;
   }
 
-  private static class XYZ {
+  public static class XYZ {
     public int x, y, z;
     public int index;
 
-    XYZ(int x, int y, int z) {
+    public XYZ(int x, int y, int z) {
       this.x = x;
       this.z = z;
       this.y = y;
       this.index = x * 16 * 256 + z * 256 + y;
     }
 
-    XYZ(int index) {
+    public XYZ(int index) {
       this.index = index;
       this.y = index % 256;
       index /= 256;
@@ -166,7 +166,11 @@ public class IntegrityChunk implements Serializable {
           System.out.println("Null edge: " + edgeType);
           continue;
         }
-        toChange.add(new int[] {index, edgeType.ordinal(), data.get(edgeType)});
+        if (edgeType == IntegrityData.MASS) {
+          toChange.add(new int[] {src, graph[index].get(edgeType.ordinal()).rev, data.get(edgeType)});
+        } else {
+          toChange.add(new int[] {index, edgeType.ordinal(), data.get(edgeType)});
+        }
       }
     }
     // Run super cool algorithm
@@ -178,8 +182,6 @@ public class IntegrityChunk implements Serializable {
 
   /** Called Asynchronously */
   public Location[] getIntegrityViolations() {
-    // Run Max Flow and get nodes to remove
-    MaxFlow.maxFlow(graph, dist, src, dest);
     List<Integer> offending = MaxFlow.getOffendingVertices(graph, dist, src, dest);
     // Translate vertices to Blocks w/ Locations
     Location[] blocks = new Location[offending.size()];
@@ -224,5 +226,9 @@ public class IntegrityChunk implements Serializable {
 
   public String getWorldName() {
     return worldName;
+  }
+
+  public List<Edge> debugGetEdgesAt(Block block) {
+    return graph[new XYZ(block.getX() - getBlockX(), block.getY(), block.getZ() - getBlockZ()).index];
   }
 }
