@@ -24,15 +24,29 @@ import io.github.jugbot.util.AsyncBukkit;
 public class ChunkProcessor {
   private static ChunkProcessor instance;
   // Operation queue and status
-  // TODO: Change to Map<Chunk, List<Block>> to allow queueing block changes
-  LinkedHashMap<Chunk, List<Block>> chunkUpdateQueue = new LinkedHashMap<>();
-  Set<Chunk> inProgress = new HashSet<Chunk>();
+  private LinkedHashSet<Chunk> chunkUpdateQueue = new LinkedHashSet<>();
+  private Set<Chunk> inProgress = new HashSet<>();
   // Loaded chunks
-  Map<Chunk, IntegrityChunk> loadedChunks = new HashMap<>();
+  private Map<Chunk, IntegrityChunk> loadedChunks = new HashMap<>();
 
   public static ChunkProcessor Instance() {
     if (instance == null) instance = new ChunkProcessor();
     return instance;
+  }
+
+  /** Fires chunk processing every tick */
+  private ChunkProcessor() {
+    Bukkit.getScheduler()
+        .scheduleSyncRepeatingTask(
+            App.Instance(),
+            new Runnable() {
+              @Override
+              public void run() {
+                ChunkProcessor.Instance().processChunks();
+              }
+            },
+            0,
+            1);
   }
 
   /**
@@ -81,29 +95,22 @@ public class ChunkProcessor {
     return integrityChunk;
   }
 
-  public void processBlock(Block block) {
-    Chunk chunk = block.getChunk();
-    List<Block> blocks = chunkUpdateQueue.get(chunk);
-    if (blocks == null) {
-      blocks = new ArrayList<>();
-      chunkUpdateQueue.put(chunk, blocks);
-    }
-    // TODO change back to regular set
-    blocks.add(block);
-    // Currently just launch a thread whenever there are changes but maybe there is
-    // a better way
-    processChunks();
+  public void queueChunkUpdate(Chunk chunk) {
+    chunkUpdateQueue.add(chunk);
   }
 
   private void processChunks() {
-    Map<Chunk, List<Block>> shouldUpdate = new HashMap<>(chunkUpdateQueue);
-    shouldUpdate.keySet().removeAll(inProgress);
-    // Remove chunks to operate from update queue
-    chunkUpdateQueue.keySet().removeAll(shouldUpdate.keySet());
-    // Mark chunks as in progress
-    inProgress.addAll(shouldUpdate.keySet());
+    if (chunkUpdateQueue.size() == 0) return;
 
-    for (Chunk chunk : shouldUpdate.keySet()) {
+    Set<Chunk> shouldUpdate = new HashSet<>(chunkUpdateQueue);
+    // Do not work on chunks that are being processed
+    shouldUpdate.removeAll(inProgress);
+    // Remove chunks to operate from update queue
+    chunkUpdateQueue.removeAll(shouldUpdate);
+    // Mark chunks as in progress
+    inProgress.addAll(shouldUpdate);
+
+    for (Chunk chunk : shouldUpdate) {
       AsyncBukkit.doTask(
           () -> {
             App.Instance().getLogger().fine("Thread Started");
