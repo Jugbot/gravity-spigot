@@ -38,12 +38,12 @@ public class IntegrityChunkStorage {
 
   private IntegrityChunkStorage() {
     String url = "jdbc:sqlite:" + App.Instance().getDataFolder() + "/chunkdata.db";
-    System.out.println("Connecting to database at " + url);
+    App.Instance().getLogger().fine("Connecting to database at " + url);
     try {
       connection = DriverManager.getConnection(url);
       if (connection != null) {
         DatabaseMetaData meta = connection.getMetaData();
-        System.out.println("The driver name is " + meta.getDriverName());
+        App.Instance().getLogger().fine("The driver name is " + meta.getDriverName());
         if (WIPE_DB) {
           connection.createStatement().execute("DROP TABLE IF EXISTS chunkmap;");
         }
@@ -52,13 +52,13 @@ public class IntegrityChunkStorage {
         throw new SQLException();
       }
     } catch (SQLException e) {
-      System.out.println(INIT_SQL);
-      System.out.println(e.getMessage());
+      App.Instance().getLogger().fine(INIT_SQL);
+      App.Instance().getLogger().fine(e.getMessage());
     }
   }
 
   public void saveChunk(IntegrityChunk chunk) {
-    System.out.println("Save Chunk");
+    App.Instance().getLogger().fine("Save Chunk");
     try {
       PreparedStatement statement = connection.prepareStatement(WRITE_SQL);
       statement.setString(1, chunk.getWorldName());
@@ -67,15 +67,15 @@ public class IntegrityChunkStorage {
       statement.setBytes(4, serialize(chunk));
       statement.execute();
     } catch (SQLException e) {
-      System.out.println(WRITE_SQL);
-      System.out.println(e.getMessage());
+      App.Instance().getLogger().fine(WRITE_SQL);
+      App.Instance().getLogger().fine(e.getMessage());
     } catch (IOException e) {
       e.printStackTrace();
     }
   }
 
   public IntegrityChunk loadChunk(String worldName, int x, int z) {
-    System.out.println("Load Chunk");
+    App.Instance().getLogger().fine("Load Chunk");
     try {
       PreparedStatement statement = connection.prepareStatement(READ_SQL);
       statement.setString(1, worldName);
@@ -85,8 +85,8 @@ public class IntegrityChunkStorage {
       if (set.isClosed()) return null;
       return (IntegrityChunk) deserialize(set.getBinaryStream("object"));
     } catch (SQLException e) {
-      System.out.println(READ_SQL);
-      System.out.println(e.getMessage());
+      App.Instance().getLogger().fine(READ_SQL);
+      App.Instance().getLogger().fine(e.getMessage());
     } catch (Exception e) {
       e.printStackTrace();
     }

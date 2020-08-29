@@ -29,7 +29,7 @@ public class Config {
     } else if ((blockDataConfigFile = new File(App.Instance().getDataFolder(), "blockdata.yml")).exists()) {
       loadBlockDataYAML(blockDataConfigFile);
     } else {
-      System.out.println("blockdata.yml doesn't exist, creating it...");
+      App.Instance().getLogger().info("blockdata.yml doesn't exist, creating it...");
       blockDataConfigFile.getParentFile().mkdirs();
       App.Instance().saveResource("blockdata.yml", false);
       loadBlockDataYAML(blockDataConfigFile);
@@ -58,7 +58,7 @@ public class Config {
     blockData = new BlockData();
     try (CSVParser parser = CSVParser.parse(blockDataConfigFile, Charsets.UTF_8, CSVFormat.DEFAULT)) {
       for (CSVRecord record : parser.getRecords()) {
-        System.out.println(record.toString());
+        App.Instance().getLogger().fine(record.toString());
         Material material = Material.getMaterial(record.get(0));
         if (material == null) {
           if (record.getRecordNumber() != 1) {

@@ -1,5 +1,6 @@
 package io.github.jugbot;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -51,8 +52,8 @@ public class MaxFlowTest {
   public void reservedEdges(RepetitionInfo info) {
     Random random = new Random();
     long seed = random.nextLong();
+    // seed = -8405525021095806718L;
     System.out.println("[ " + info.getCurrentRepetition() + " ] " + seed);
-    // seed = -62000569186895826L;
     random.setSeed(seed);
     final int MODIFIER = 16 * 256;
     final int V = 16 * 16 * 256 / MODIFIER + 2;
@@ -68,7 +69,9 @@ public class MaxFlowTest {
       IntegrityData state = randomEnum(random, IntegrityData.class);
       if (random.nextFloat() < 0.7
           && graphA[u].get(state.ordinal()) == null
-          && (state == IntegrityData.MASS || graphA[v].get(state.opposite().ordinal()) == null)) {
+          && state != IntegrityData.MASS
+          // Implementation assumes cardinal edges pair with one opposite edge (not multiple)
+          && graphA[v].get(state.opposite().ordinal()) == null) {
         MaxFlow.createEdge(graphA, u, v, cap, state);
       } else {
         MaxFlow.createEdge(graphA, u, v, cap);
@@ -80,21 +83,28 @@ public class MaxFlowTest {
     int s = random.nextInt(V - 1 - 2);
     int t = s + 1;
     System.out.println(s + "s " + t + "t");
-    MaxFlow.dinicBfs(graphA, s, t, distA);
-    MaxFlow.dinicBfs(graphB, s, t, distB);
-    int difference = differences(distA, distB);
-    assertTrue(difference == 0, "Vertex level array is not equivalent! " + difference + " differences.");
+
     int resultA = MaxFlow.maxFlow(graphA, distA, s, t);
     int resultB = MaxFlow.maxFlow(graphB, distB, s, t);
-    assertTrue(resultA == resultB, resultA + " != " + resultB);
+    System.out.println("Graph A (MODIFIED)");
+    printGraph(graphA);
+    System.out.println("Graph B (NEW)");
+    printGraph(graphB);
+    verifyGraph(graphA, s, t);
+    verifyGraph(graphB, s, t);
+    assertTrue(MaxFlow.maxFlow(graphA, distA, s, t) == 0 && MaxFlow.maxFlow(graphB, distB, s, t) == 0);
+    assertTrue(resultA == resultB, resultA + " (mod) != " + resultB + " (new)");
+    int badA = MaxFlow.getOffendingVertices(graphA, distA, s, t).size();
+    int badB = MaxFlow.getOffendingVertices(graphB, distB, s, t).size();
+    assertTrue(badA == badB, badA + " (mod) != " + badB + " (new)");
   }
 
   @RepeatedTest(10)
   public void updatesEdges(RepetitionInfo info) {
     Random random = new Random();
     long seed = random.nextLong();
-    System.out.println("[ " + info.getCurrentRepetition() + " ] " + seed);
     // seed = -62000569186895826L;
+    System.out.println("[ " + info.getCurrentRepetition() + " ] " + seed);
     random.setSeed(seed);
     final int MODIFIER = 256 * 16;
     final int V = 16 * 16 * 256 / MODIFIER + 2;
@@ -125,19 +135,17 @@ public class MaxFlowTest {
     int resultA = MaxFlow.maxFlow(graphA, distA, s, t);
     resultA += MaxFlow.changeEdges(graphA, distA, s, t, toChange, V - 1, V - 2);
     int resultB = MaxFlow.maxFlow(graphB, distB, s, t);
-    assertTrue(MaxFlow.maxFlow(graphA, distA, s, t) == 0 && MaxFlow.maxFlow(graphB, distB, s, t) == 0);
-    assertTrue(resultA == resultB, resultA + " (mod) != " + resultB + " (new)");
     System.out.println("Graph A (MODIFIED)");
     printGraph(graphA);
     System.out.println("Graph B (NEW)");
     printGraph(graphB);
-    // int differences = differences(distA, distB);
-    // assertTrue(differences == 0, "Vertex level array is not equivalent! " + differences + " differences.");
+    verifyGraph(graphA, s, t);
+    verifyGraph(graphB, s, t);
+    assertTrue(MaxFlow.maxFlow(graphA, distA, s, t) == 0 && MaxFlow.maxFlow(graphB, distB, s, t) == 0);
+    assertTrue(resultA == resultB, resultA + " (mod) != " + resultB + " (new)");
     int badA = MaxFlow.getOffendingVertices(graphA, distA, s, t).size();
     int badB = MaxFlow.getOffendingVertices(graphB, distB, s, t).size();
     assertTrue(badA == badB, badA + " (mod) != " + badB + " (new)");
-    verifyGraph(graphA, s, t);
-    verifyGraph(graphB, s, t);
   }
 
   private static int differences(int[] a, int[] b) {
@@ -156,7 +164,7 @@ public class MaxFlowTest {
       for (MaxFlow.Edge edge : graph[u]) {
         if (edge == null) continue;
         assertTrue(edge.f <= edge.cap, "(" + u + "u) f " + edge.f + " > cap " + edge.cap);
-        assertTrue(edge.f == -graph[edge.t].get(edge.rev).f, "Edge flow is not mirrored!");
+        assertEquals(edge.f, -graph[edge.t].get(edge.rev).f, 0.0f, "Edge flow is not mirrored!");
         if (edge.f > 0) {
           debt[u] -= edge.f;
           debt[edge.t] += edge.f;

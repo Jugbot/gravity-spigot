@@ -17,7 +17,7 @@ public class BlockChanger extends PacketAdapter {
 
   @Override
   public void onPacketSending(PacketEvent event) {
-    System.out.println("Block Place Event");
+    App.Instance().getLogger().fine("Block Place Event");
     // event.get
     // Bukkit.getPluginManager().callEvent(new BlockChangeEvent(event.getBlock()));
   }

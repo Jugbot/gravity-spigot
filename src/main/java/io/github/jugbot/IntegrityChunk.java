@@ -134,7 +134,7 @@ public class IntegrityChunk implements Serializable {
   IntegrityChunk(Chunk liveChunk) {
     x = liveChunk.getX();
     z = liveChunk.getZ();
-    // System.out.println(x+ " "+z);
+    // App.Instance().getLogger().fine(x+ " "+z);
     worldName = liveChunk.getWorld().getName();
     graph = MaxFlow.createGraph(nodeCount);
     dist = new int[nodeCount];
@@ -155,15 +155,16 @@ public class IntegrityChunk implements Serializable {
       // If there is no structural change, do nothing
       if (newMaterial == oldMaterial) continue;
       if (!isStructural(oldMaterial) && !isStructural(newMaterial)) continue;
-      System.out.println(
-          "Change from " + oldMaterial + " to " + newMaterial + " at " + loc.x + ", " + loc.y + ", " + loc.z);
+      App.Instance()
+          .getLogger()
+          .fine("Change from " + oldMaterial + " to " + newMaterial + " at " + loc.x + ", " + loc.y + ", " + loc.z);
       // Change edge weights to the new data
       EnumMap<IntegrityData, Integer> data = getStructuralData(newMaterial);
       // Record edge weights to be changed
       for (IntegrityData edgeType : data.keySet()) {
         // Existing edge / vertex may not exist
         if (graph[index].get(edgeType.ordinal()) == null) {
-          System.out.println("Null edge: " + edgeType);
+          App.Instance().getLogger().fine("Null edge: " + edgeType);
           continue;
         }
         if (edgeType == IntegrityData.MASS) {

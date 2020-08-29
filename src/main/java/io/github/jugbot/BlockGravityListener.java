@@ -10,10 +10,10 @@ public class BlockGravityListener implements Listener {
   // TODO: Change to pillars of blocks not single blocks for better handling sand
   @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
   void onBlockGravity(BlockGravityEvent event) {
-    System.out.println("Block Gravity");
+    App.Instance().getLogger().fine("Block Gravity");
 
     for (Block block : event.getBlocks()) {
-      System.out.println(block);
+      App.Instance().getLogger().fine(block.toString());
       Block below = block.getRelative(0, -1, 0);
       // If block can fall, then make it fall
       // Otherwise just break the block

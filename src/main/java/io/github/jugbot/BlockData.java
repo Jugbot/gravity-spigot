@@ -18,11 +18,11 @@ public class BlockData implements ConfigurationSerializable {
   }
 
   BlockData(Map<String, Object> serialized) {
-    System.out.println("Initializing blockmap...");
+    App.Instance().getLogger().info("Initializing blockmap...");
     blocks = new HashMap<Material, EnumMap<IntegrityData, Integer>>();
     for (Map.Entry<String, Object> kv : serialized.entrySet()) {
       Material material = Material.matchMaterial(kv.getKey());
-      System.out.println(material);
+      App.Instance().getLogger().fine(material.toString());
       Map<String, Object> weights;
       if (kv.getValue() instanceof MemorySection) {
         weights = ((MemorySection) kv.getValue()).getValues(false);

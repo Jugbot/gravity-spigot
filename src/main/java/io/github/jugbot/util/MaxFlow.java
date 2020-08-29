@@ -54,8 +54,11 @@ public class MaxFlow {
       int rev = tag.opposite().ordinal();
       edge = new Edge(v, rev, cap);
       graph[u].set(tag.ordinal(), edge);
-      if (graph[v].get(rev) == null) {
+      Edge reverse = graph[v].get(rev);
+      if (reverse == null) {
         graph[v].set(rev, new Edge(u, tag.ordinal(), 0));
+      } else {
+        assert reverse.t == u : "Non-uclidean structure!";
       }
     }
     return edge;

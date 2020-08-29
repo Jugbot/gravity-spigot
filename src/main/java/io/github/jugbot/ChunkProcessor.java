@@ -47,7 +47,7 @@ public class ChunkProcessor {
           IntegrityChunkStorage.Instance().loadChunk(chunk.getWorld().getName(), chunk.getX(), chunk.getZ());
     }
     if (integrityChunk == null) {
-      System.out.println("Created Chunk " + chunk.toString());
+      App.Instance().getLogger().fine("Created Chunk " + chunk.toString());
       integrityChunk = new IntegrityChunk(chunk);
       IntegrityChunkStorage.Instance().saveChunk(integrityChunk);
     }
@@ -63,7 +63,7 @@ public class ChunkProcessor {
     IntegrityChunk integrityChunk = loadedChunks.remove(chunk);
     if (integrityChunk != null) {
       IntegrityChunkStorage.Instance().saveChunk(integrityChunk);
-      System.out.println("Unloaded Chunk " + chunk.toString());
+      App.Instance().getLogger().fine("Unloaded Chunk " + chunk.toString());
     }
   }
 
@@ -74,7 +74,7 @@ public class ChunkProcessor {
   public IntegrityChunk getChunk(Chunk chunk) {
     IntegrityChunk integrityChunk = loadedChunks.get(chunk);
     if (integrityChunk == null) {
-      System.out.println("Chunk not loaded! " + chunk.toString());
+      App.Instance().getLogger().fine("Chunk not loaded! " + chunk.toString());
       loadChunk(chunk);
       integrityChunk = loadedChunks.get(chunk);
     }
@@ -106,7 +106,7 @@ public class ChunkProcessor {
     for (Chunk chunk : shouldUpdate.keySet()) {
       AsyncBukkit.doTask(
           () -> {
-            System.out.println("Thread Started");
+            App.Instance().getLogger().fine("Thread Started");
             IntegrityChunk integrityChunk = getChunk(chunk);
             // Update integrity
             integrityChunk.update(chunk.getChunkSnapshot());
@@ -120,8 +120,8 @@ public class ChunkProcessor {
             Block[] blocks = Arrays.asList(locations).stream().map(loc -> loc.getBlock()).toArray(Block[]::new);
             // Call gravity event on blocks in chunk
             Bukkit.getPluginManager().callEvent(new BlockGravityEvent(blocks));
-            System.out.println("Thread Finished");
-            System.out.println("Blocks to fall: " + blocks.length);
+            App.Instance().getLogger().fine("Thread Finished");
+            App.Instance().getLogger().fine("Blocks to fall: " + blocks.length);
           });
     }
   }

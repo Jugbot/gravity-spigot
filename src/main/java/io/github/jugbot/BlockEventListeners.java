@@ -10,7 +10,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 public class BlockEventListeners implements Listener {
   @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
   void onBlockBreak(BlockBreakEvent event) {
-    System.out.println("Block Break Event");
+    App.Instance().getLogger().fine("Block Break Event");
     // Wait until after block is broken
     App.Instance()
         .getServer()
@@ -26,7 +26,7 @@ public class BlockEventListeners implements Listener {
 
   @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
   void onBlockPlace(BlockPlaceEvent event) {
-    System.out.println("Block Place Event");
+    App.Instance().getLogger().fine("Block Place Event");
     // Wait until after block is placed
     App.Instance()
         .getServer()
@@ -42,43 +42,43 @@ public class BlockEventListeners implements Listener {
 
   // @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
   // void onBlockBurn(BlockBurnEvent event) {
-  // System.out.println("Block Place Event");
+  // App.Instance().getLogger().fine("Block Place Event");
   // Bukkit.getPluginManager().callEvent(new BlockChangeEvent(event.getBlock()));
   // }
 
   // @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
   // void onBlockExplode(BlockExplodeEvent event) {
-  // System.out.println("Block Place Event");
+  // App.Instance().getLogger().fine("Block Place Event");
   // Bukkit.getPluginManager().callEvent(new BlockChangeEvent(event.getBlock()));
   // }
 
   // @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
   // void onBlockFade(BlockFadeEvent event) {
-  // System.out.println("Block Place Event");
+  // App.Instance().getLogger().fine("Block Place Event");
   // Bukkit.getPluginManager().callEvent(new BlockChangeEvent(event.getBlock()));
   // }
 
   // @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
   // void onBlockBurn(BlockPistonEvent event) {
-  // System.out.println("Block Place Event");
+  // App.Instance().getLogger().fine("Block Place Event");
   // Bukkit.getPluginManager().callEvent(new BlockChangeEvent(event.getBlock()));
   // }
 
   // @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
   // void onBlockBurn(BlockGrowEvent event) {
-  // System.out.println("Block Place Event");
+  // App.Instance().getLogger().fine("Block Place Event");
   // Bukkit.getPluginManager().callEvent(new BlockChangeEvent(event.getBlock()));
   // }
 
   // @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
   // void onBlockBurn(LeavesDecayEvent event) {
-  // System.out.println("Block Place Event");
+  // App.Instance().getLogger().fine("Block Place Event");
   // Bukkit.getPluginManager().callEvent(new BlockChangeEvent(event.getBlock()));
   // }
 
   // @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
   // void onBlockBurn(EntityChangeBlockEvent event) {
-  // System.out.println("Block Place Event");
+  // App.Instance().getLogger().fine("Block Place Event");
   // Bukkit.getPluginManager().callEvent(new BlockChangeEvent(event.getBlock()));
   // }
 }

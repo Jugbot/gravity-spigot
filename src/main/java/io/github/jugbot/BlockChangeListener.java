@@ -9,7 +9,7 @@ public class BlockChangeListener implements Listener {
   // TODO: Change to pillars of blocks not single blocks for better handling sand
   @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
   void onBlockChange(BlockChangeEvent event) {
-    System.out.println("Block Gravity");
+    App.Instance().getLogger().fine("Block Gravity");
     ChunkProcessor.Instance().processBlock(event.getBlock());
   }
 }
