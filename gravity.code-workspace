@@ -10,6 +10,9 @@
     "java.jdt.ls.vmargs": "-Dfile.encoding=UTF-8",
     "java.configuration.updateBuildConfiguration": "automatic",
     "java.checkstyle.version": "8.35",
-    "java.checkstyle.configuration": "/google_checks.xml"
+    "java.checkstyle.configuration": "/google_checks.xml",
+    "logViewer.watch": [
+      "C:\\Users\\Jugbot\\Documents\\GitHub\\spigot\\plugins\\Gravity\\logs\\latest.log"
+    ]
   }
 }

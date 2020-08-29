@@ -7,7 +7,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 
 public class BlockGravityListener implements Listener {
-  // TODO: Change to pillars of blocks not single blocks for better handling sand
+  
   @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
   void onBlockGravity(BlockGravityEvent event) {
     App.Instance().getLogger().fine("Block Gravity");

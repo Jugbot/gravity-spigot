@@ -18,8 +18,8 @@ import org.bukkit.block.Block;
 import io.github.jugbot.util.AsyncBukkit;
 
 /**
- * Takes block changes and outputs offending blocks that should fall asynchronously Note reported blocks may be in other
- * chunks
+ * Takes block changes and outputs offending blocks that should fall asynchronously. 
+ * Note reported blocks may be in other chunks.
  */
 public class ChunkProcessor {
   private static ChunkProcessor instance;
