@@ -7,7 +7,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 
 public class BlockGravityListener implements Listener {
-  
+
   @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
   void onBlockGravity(BlockGravityEvent event) {
     App.Instance().getLogger().fine("Block Gravity");

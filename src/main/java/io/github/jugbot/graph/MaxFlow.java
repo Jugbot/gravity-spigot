@@ -1,7 +1,8 @@
 package io.github.jugbot.util;
 
-import java.io.Serializable;
 import java.util.*;
+
+import javax.lang.model.type.ArrayType;
 
 import io.github.jugbot.IntegrityData;
 
@@ -15,96 +16,78 @@ import io.github.jugbot.IntegrityData;
  */
 public class MaxFlow {
 
-  public static class Edge implements Serializable {
-    public int t;
-    public int rev;
-    public float cap;
-    public float f;
+  private MaxFlow() {}
 
-    public Edge(int t, int rev, float cap) {
-      this.t = t;
-      this.rev = rev;
-      this.cap = cap;
-    }
-  }
-
-  public static List<Edge>[] createGraph(int nodes) {
-    List<Edge>[] graph = new List[nodes];
-    for (int i = 0; i < nodes; i++)
-      graph[i] = new ArrayList<>(Collections.nCopies(IntegrityData.values().length, null));
-    return graph;
-  }
-
-  public static Edge createEdge(List<Edge>[] graph, int u, int v, float cap) {
+  public static Edge createEdge(List<List<Edge>> graph, int u, int v, float cap) {
     return createEdge(graph, u, v, cap, null);
   }
 
-  public static Edge createEdge(List<Edge>[] graph, int u, int v, float cap, IntegrityData tag) {
+  public static Edge createEdge(List<List<Edge>> graph, int u, int v, float cap, IntegrityData tag) {
     Edge edge;
     if (tag == null) {
-      edge = new Edge(v, graph[v].size(), cap);
-      graph[u].add(edge);
-      graph[v].add(new Edge(u, graph[u].size() - 1, 0));
+      edge = new Edge(v, graph.get(v).size(), cap);
+      graph.get(u).add(edge);
+      graph.get(v).add(new Edge(u, graph.get(u).size() - 1, 0));
     } else if (tag == IntegrityData.MASS) {
       // from src to edge mass slot
       edge = new Edge(v, tag.ordinal(), cap);
-      graph[u].add(edge);
-      graph[v].set(tag.ordinal(), new Edge(u, graph[u].size() - 1, 0));
+      graph.get(u).add(edge);
+      graph.get(v).set(tag.ordinal(), new Edge(u, graph.get(u).size() - 1, 0));
     } else {
       int rev = tag.opposite().ordinal();
       edge = new Edge(v, rev, cap);
-      graph[u].set(tag.ordinal(), edge);
-      Edge reverse = graph[v].get(rev);
+      graph.get(u).set(tag.ordinal(), edge);
+      Edge reverse = graph.get(v).get(rev);
       if (reverse == null) {
-        graph[v].set(rev, new Edge(u, tag.ordinal(), 0));
+        graph.get(v).set(rev, new Edge(u, tag.ordinal(), 0));
       } else {
-        assert reverse.t == u : "Non-uclidean structure!";
+        assert reverse.t == u : "Non-euclidean structure!";
       }
     }
     return edge;
   }
 
-  private static Edge deleteEdge(List<Edge>[] graph, int u, int e) {
+  private static Edge deleteEdge(List<List<Edge>> graph, int u, int e) {
     if (e < IntegrityData.values().length) {
       // do not free reserved slot
-      return graph[u].set(e, null);
+      return graph.get(u).set(e, null);
     } else {
       // remove from list
-      int eLast = graph[u].size() - 1;
+      int eLast = graph.get(u).size() - 1;
       if (e < eLast) {
         // shorten array
-        Edge edge = graph[u].set(e, graph[u].get(eLast));
-        Edge fixme = graph[u].remove(eLast);
-        graph[fixme.t].get(fixme.rev).rev = e;
+        Edge edge = graph.get(u).set(e, graph.get(u).get(eLast));
+        Edge fixme = graph.get(u).remove(eLast);
+        graph.get(fixme.t).get(fixme.rev).rev = e;
         return edge;
       } else {
         // remove last
-        return graph[u].remove(e);
+        return graph.get(u).remove(e);
       }
     }
   }
 
-  private static void deleteEdgePair(List<Edge>[] graph, int u, int e) {
-    if (graph[u].get(e) == null) {
+  private static void deleteEdgePair(List<List<Edge>> graph, int u, int e) {
+    if (graph.get(u).get(e) == null) {
       return;
     }
     Edge edge = deleteEdge(graph, u, e);
     deleteEdge(graph, edge.t, edge.rev);
   }
 
-  private static void deleteEdgePairs(List<Edge>[] graph, int u) {
-    for (int e = graph[u].size() - 1; e >= 0; e = Math.min(e - 1, graph[u].size() - 1)) {
+  private static void deleteEdgePairs(List<List<Edge>> graph, int u) {
+    for (int e = graph.get(u).size() - 1; e >= 0; e = Math.min(e - 1, graph.get(u).size() - 1)) {
       deleteEdgePair(graph, u, e);
     }
   }
 
-  private static void deleteVertexEdges(List<Edge>[] graph, Iterable<Integer> vertices) {
+  private static void deleteVertexEdges(List<List<Edge>> graph, Iterable<Integer> vertices) {
     for (int u : vertices) {
       // deleteEdgePairs(graph, u);
     }
   }
 
-  public static void pruneEdges(List<Edge>[] graph, int[] dist, int src, int dest, List<int[]> toChange) {
+  public static void pruneEdges(List<List<Edge>> graph, int[] dist, int src, int dest, List<int[]> toChange) {
     // remove unused edge pairs for saving memory
   }
 
@@ -115,7 +98,7 @@ public class MaxFlow {
    * @return The change in max flow.
    */
   public static int changeEdges(
-      List<Edge>[] graph, int[] dist, int s, int t, Iterable<int[]> toChange, int temp_s, int temp_t) {
+      List<List<Edge>> graph, int[] dist, int s, int t, Iterable<int[]> toChange, int temp_s, int temp_t) {
     deleteEdgePairs(graph, temp_s);
     deleteEdgePairs(graph, temp_t);
     int max_flow = 0;
@@ -123,14 +106,14 @@ public class MaxFlow {
       int u = changeAt[0];
       int e = changeAt[1];
       int cap = changeAt[2];
-      assert e < graph[u].size() : "Edge does not exist!";
-      Edge existing = graph[u].get(e);
+      assert e < graph.get(u).size() : "Edge does not exist!";
+      Edge existing = graph.get(u).get(e);
       assert existing != null : "Edge does not exist!";
       // Check if flow should be reduced
       if (existing.f > cap) {
         float df = existing.f - cap;
         existing.f = cap;
-        graph[existing.t].get(existing.rev).f = -cap;
+        graph.get(existing.t).get(existing.rev).f = -cap;
         // Create temp edge to rebalance edges later
         createEdge(graph, existing.t, temp_t, df);
         createEdge(graph, temp_s, u, df);
@@ -150,7 +133,7 @@ public class MaxFlow {
     createEdge(graph, s, t, Integer.MAX_VALUE);
     int final_flow = MaxFlow.maxFlow(graph, dist, temp_s, temp_t);
     assert final_flow == df : ("final_flow: " + final_flow + " should be " + df);
-    deleteEdgePair(graph, s, graph[s].size() - 1);
+    deleteEdgePair(graph, s, graph.get(s).size() - 1);
     // Probably harmless but delete edges anyways
     deleteEdgePairs(graph, temp_s);
     deleteEdgePairs(graph, temp_t);
@@ -159,15 +142,15 @@ public class MaxFlow {
     return -final_flow;
   }
 
-  public static boolean dinicBfs(List<Edge>[] graph, int src, int dest, int[] dist) {
+  public static boolean dinicBfs(List<List<Edge>> graph, int src, int dest, int[] dist) {
     Arrays.fill(dist, -1);
     dist[src] = 0;
-    int[] Q = new int[graph.length];
+    int[] Q = new int[graph.size()];
     int sizeQ = 0;
     Q[sizeQ++] = src;
     for (int i = 0; i < sizeQ; i++) {
       int u = Q[i];
-      for (Edge e : graph[u]) {
+      for (Edge e : graph.get(u)) {
         if (e == null) continue;
         if (dist[e.t] < 0 && e.f < e.cap) {
           dist[e.t] = dist[u] + 1;
@@ -178,16 +161,16 @@ public class MaxFlow {
     return dist[dest] > -1;
   }
 
-  static float dinicDfs(List<Edge>[] graph, int[] ptr, int[] dist, int dest, int u, float f) {
+  public static float dinicDfs(List<List<Edge>> graph, int[] ptr, int[] dist, int dest, int u, float f) {
     if (u == dest) return f;
-    for (; ptr[u] < graph[u].size(); ++ptr[u]) {
-      Edge e = graph[u].get(ptr[u]);
+    for (; ptr[u] < graph.get(u).size(); ++ptr[u]) {
+      Edge e = graph.get(u).get(ptr[u]);
       if (e == null) continue;
       if (dist[e.t] == dist[u] + 1 && e.f < e.cap) {
         float df = dinicDfs(graph, ptr, dist, dest, e.t, Math.min(f, e.cap - e.f));
         if (df > 0) {
           e.f += df;
-          graph[e.t].get(e.rev).f -= df;
+          graph.get(e.t).get(e.rev).f -= df;
           return df;
         }
       }
@@ -195,12 +178,12 @@ public class MaxFlow {
     return 0;
   }
 
-  public static int maxFlow(List<Edge>[] graph, int[] dist, int src, int dest) {
+  public static int maxFlow(List<List<Edge>> graph, int[] dist, int src, int dest) {
     assert src != dest : "Source vertex cannot be the same as the destination!";
     int flow = 0;
     while (dinicBfs(graph, src, dest, dist)) {
       List<Integer> loc = getOffendingVertices(graph, dist, src, dest);
-      int[] ptr = new int[graph.length]; // keeps track of visited edges per vertex
+      int[] ptr = new int[graph.size()]; // keeps track of visited edges per vertex
       while (true) {
         float df = dinicDfs(graph, ptr, dist, dest, src, Float.POSITIVE_INFINITY);
         if (df == 0) break;
@@ -210,10 +193,11 @@ public class MaxFlow {
     return flow;
   }
 
-  public static List<Integer> getOffendingVertices(List<Edge>[] graph, int[] dist, int src, int dest) {
+  public static List<Integer> getOffendingVertices(List<List<Edge>> graph, int[] dist, int src, int dest) {
+    // TODO: also flag chunk edge violations
     dinicBfs(graph, src, dest, dist);
     List<Integer> result = new ArrayList<>();
-    for (Edge e : graph[src]) {
+    for (Edge e : graph.get(src)) {
       if (e == null) continue;
       int u = e.t;
       int level = dist[u];

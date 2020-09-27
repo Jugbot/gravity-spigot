@@ -19,28 +19,28 @@ public class MaxFlowTest {
 
   @Test
   public void reservesIndices() {
-    List<MaxFlow.Edge>[] graph = MaxFlow.createGraph(3);
-    graph[0].set(3, null);
+    DefaultList<MaxFlow.Edge> graph = new DefaultList<>(3);
+    graph.get(0).set(3, null);
   }
 
   @Test
   public void returnsMaxFlow() {
-    List<MaxFlow.Edge>[] graph = MaxFlow.createGraph(3);
+    DefaultList<MaxFlow.Edge> graph = new DefaultList<>(3);
     MaxFlow.createEdge(graph, 0, 1, 3);
     MaxFlow.createEdge(graph, 0, 2, 2);
     MaxFlow.createEdge(graph, 1, 2, 2);
-    // int[] dist = new int[graph.length];
-    assertTrue(4 == MaxFlow.maxFlow(graph, new int[graph.length], 0, 2));
+    // int[] dist = new int[graph.size()];
+    assertTrue(4 == MaxFlow.maxFlow(graph, new int[graph.size()], 0, 2));
   }
 
   @Test
   public void reservedEdgesSimple() {
-    List<MaxFlow.Edge>[] graph = MaxFlow.createGraph(3);
+    DefaultList<MaxFlow.Edge> graph = new DefaultList<>(3);
     MaxFlow.createEdge(graph, 0, 1, 3, IntegrityData.MASS);
     MaxFlow.createEdge(graph, 0, 2, 2, IntegrityData.UP);
     MaxFlow.createEdge(graph, 1, 2, 2);
-    // int[] dist = new int[graph.length];
-    assertTrue(4 == MaxFlow.maxFlow(graph, new int[graph.length], 0, 2));
+    // int[] dist = new int[graph.size()];
+    assertTrue(4 == MaxFlow.maxFlow(graph, new int[graph.size()], 0, 2));
   }
 
   private static <T extends Enum<?>> T randomEnum(Random random, Class<T> clazz) {
@@ -59,8 +59,8 @@ public class MaxFlowTest {
     final int V = 16 * 16 * 256 / MODIFIER + 2;
     final int E = V * 4;
 
-    List<MaxFlow.Edge>[] graphA = MaxFlow.createGraph(V);
-    List<MaxFlow.Edge>[] graphB = MaxFlow.createGraph(V);
+    DefaultList<MaxFlow.Edge> graphA = new DefaultList<>(V);
+    DefaultList<MaxFlow.Edge> graphB = new DefaultList<>(V);
 
     for (int i = 0; i < E; i++) {
       int u = random.nextInt(V - 2);
@@ -68,10 +68,10 @@ public class MaxFlowTest {
       int cap = random.nextInt(42);
       IntegrityData state = randomEnum(random, IntegrityData.class);
       if (random.nextFloat() < 0.7
-          && graphA[u].get(state.ordinal()) == null
+          && graphA.get(u).get(state.ordinal()) == null
           && state != IntegrityData.MASS
           // Implementation assumes cardinal edges pair with one opposite edge (not multiple)
-          && graphA[v].get(state.opposite().ordinal()) == null) {
+          && graphA.get(v).get(state.opposite().ordinal()) == null) {
         MaxFlow.createEdge(graphA, u, v, cap, state);
       } else {
         MaxFlow.createEdge(graphA, u, v, cap);
@@ -110,8 +110,8 @@ public class MaxFlowTest {
     final int V = 16 * 16 * 256 / MODIFIER + 2;
     final int E = V * 4;
 
-    List<MaxFlow.Edge>[] graphA = MaxFlow.createGraph(V);
-    List<MaxFlow.Edge>[] graphB = MaxFlow.createGraph(V);
+    DefaultList<MaxFlow.Edge> graphA = new DefaultList<>(V);
+    DefaultList<MaxFlow.Edge> graphB = new DefaultList<>(V);
     List<int[]> toChange = new ArrayList<>();
     for (int i = 0; i < E; i++) {
       int u = random.nextInt(V - 2);
@@ -120,7 +120,7 @@ public class MaxFlowTest {
       MaxFlow.createEdge(graphA, u, v, cap);
       if (random.nextFloat() < 0.25) {
         int change_cap = random.nextInt(42);
-        toChange.add(new int[] {u, graphA[u].size() - 1, change_cap});
+        toChange.add(new int[] {u, graphA.get(u).size() - 1, change_cap});
         MaxFlow.createEdge(graphB, u, v, change_cap);
       } else {
         MaxFlow.createEdge(graphB, u, v, cap);
@@ -158,13 +158,13 @@ public class MaxFlowTest {
     return count;
   }
 
-  private static void verifyGraph(List<MaxFlow.Edge>[] graph, int s, int t) {
-    int[] debt = new int[graph.length];
-    for (int u = 0; u < graph.length; u++) {
-      for (MaxFlow.Edge edge : graph[u]) {
+  private static void verifyGraph(DefaultList<MaxFlow.Edge> graph, int s, int t) {
+    int[] debt = new int[graph.size()];
+    for (int u = 0; u < graph.size(); u++) {
+      for (MaxFlow.Edge edge : graph.get(u)) {
         if (edge == null) continue;
         assertTrue(edge.f <= edge.cap, "(" + u + "u) f " + edge.f + " > cap " + edge.cap);
-        assertEquals(edge.f, -graph[edge.t].get(edge.rev).f, 0.0f, "Edge flow is not mirrored!");
+        assertEquals(edge.f, -graph.get(edge.t).get(edge.rev).f, 0.0f, "Edge flow is not mirrored!");
         if (edge.f > 0) {
           debt[u] -= edge.f;
           debt[edge.t] += edge.f;
@@ -174,13 +174,13 @@ public class MaxFlowTest {
     assertTrue(debt[s] == -debt[t]);
     debt[s] = 0;
     debt[t] = 0;
-    assertTrue(Arrays.equals(debt, new int[graph.length]));
+    assertTrue(Arrays.equals(debt, new int[graph.size()]));
   }
 
-  private static void printGraph(List<MaxFlow.Edge>[] graph) {
-    for (int u = 0; u < graph.length; u++) {
+  private static void printGraph(DefaultList<MaxFlow.Edge> graph) {
+    for (int u = 0; u < graph.size(); u++) {
       System.out.print("NODE " + u + "");
-      for (MaxFlow.Edge edge : graph[u]) {
+      for (MaxFlow.Edge edge : graph.get(u)) {
         if (edge == null) continue;
         System.out.print(" " + edge.t + "(" + edge.f + ")");
       }

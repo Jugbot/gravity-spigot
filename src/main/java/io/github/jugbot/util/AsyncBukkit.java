@@ -9,6 +9,9 @@ import org.bukkit.Bukkit;
 import io.github.jugbot.App;
 
 public class AsyncBukkit {
+
+  private AsyncBukkit() {}
+
   /**
    * Utility method for truly asynchronous tasks. CPU load should generally be heavy in task and light in callback.
    *

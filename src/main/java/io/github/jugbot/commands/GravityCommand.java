@@ -23,7 +23,8 @@ import io.github.jugbot.BlockData;
 import io.github.jugbot.ChunkProcessor;
 import io.github.jugbot.IntegrityChunk;
 import io.github.jugbot.IntegrityData;
-import io.github.jugbot.util.MaxFlow.Edge;
+import io.github.jugbot.util.Graph;
+import io.github.jugbot.util.MaxFlow;
 
 public class GravityCommand implements CommandExecutor {
 
@@ -55,14 +56,14 @@ public class GravityCommand implements CommandExecutor {
                     + new IntegrityChunk.XYZ(
                             block.getX() - iChunk.getBlockX(), block.getY(), block.getZ() - iChunk.getBlockZ())
                         .index);
-            List<Edge> edges = iChunk.debugGetEdgesAt(block);
+            List<MaxFlow.Edge> edges = iChunk.debugGetEdgesAt(block);
             for (IntegrityData type : IntegrityData.values()) {
-              Edge edge = edges.get(type.ordinal());
+              MaxFlow.Edge edge = edges.get(type.ordinal());
               if (edge == null) player.sendMessage(type.name() + ": null");
               else player.sendMessage(type.name() + ": " + edge.cap + "c " + edge.f + "f");
             }
             for (int i = IntegrityData.values().length; i < edges.size(); i++) {
-              Edge edge = edges.get(i);
+              MaxFlow.Edge edge = edges.get(i);
               player.sendMessage(edge.t + ": " + edge.cap + "c " + edge.f + "f");
             }
           }
