@@ -73,16 +73,16 @@ public class Config {
           }
           continue;
         }
-        EnumMap<IntegrityData, Integer> data;
+        EnumMap<IntegrityData, Float> data;
         try {
           data = new EnumMap(IntegrityData.class);
-          data.put(IntegrityData.MASS, Integer.parseUnsignedInt(record.get(1)));
-          data.put(IntegrityData.UP, Integer.parseUnsignedInt(record.get(2)));
-          data.put(IntegrityData.DOWN, Integer.parseUnsignedInt(record.get(3)));
-          data.put(IntegrityData.NORTH, Integer.parseUnsignedInt(record.get(4)));
-          data.put(IntegrityData.EAST, Integer.parseUnsignedInt(record.get(5)));
-          data.put(IntegrityData.SOUTH, Integer.parseUnsignedInt(record.get(6)));
-          data.put(IntegrityData.WEST, Integer.parseUnsignedInt(record.get(7)));
+          data.put(IntegrityData.MASS, Float.parseFloat(record.get(1)));
+          data.put(IntegrityData.UP, Float.parseFloat(record.get(2)));
+          data.put(IntegrityData.DOWN, Float.parseFloat(record.get(3)));
+          data.put(IntegrityData.NORTH, Float.parseFloat(record.get(4)));
+          data.put(IntegrityData.EAST, Float.parseFloat(record.get(5)));
+          data.put(IntegrityData.SOUTH, Float.parseFloat(record.get(6)));
+          data.put(IntegrityData.WEST, Float.parseFloat(record.get(7)));
         } catch (NumberFormatException e) {
           App.Instance()
               .getLogger()

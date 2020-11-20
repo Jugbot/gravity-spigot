@@ -11,6 +11,7 @@ import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import io.github.jugbot.commands.GravityCommand;
+import io.github.jugbot.graph.SubGraphIO;
 
 /** Hello world! */
 public class App extends JavaPlugin {
@@ -48,7 +49,7 @@ public class App extends JavaPlugin {
     ConfigurationSerialization.registerClass(BlockData.class);
     Config.Instance();
     ChunkProcessor.Instance();
-    IntegrityChunkStorage.Instance();
+    SubGraphIO.Instance();
     /** REGISTER */
     getServer().getPluginManager().registerEvents(new ChunkListener(), this);
     getServer().getPluginManager().registerEvents(new BlockEventListeners(), this);

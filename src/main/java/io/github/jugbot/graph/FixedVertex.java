@@ -22,5 +22,4 @@ public class FixedVertex<T> extends AbstractList<T> {
     // TODO Auto-generated method stub
     return list.length;
   }
-  
 }

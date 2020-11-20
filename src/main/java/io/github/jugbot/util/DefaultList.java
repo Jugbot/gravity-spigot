@@ -15,7 +15,7 @@ import org.omg.IOP.TAG_ALTERNATE_IIOP_ADDRESS;
 public class DefaultList<T> extends AbstractList<T> implements Serializable {
   private T[] list;
   private final T fallback;
-  
+
   public DefaultList(T[] list, T fallback) {
     this.fallback = fallback;
     this.list = list;
@@ -62,5 +62,4 @@ public class DefaultList<T> extends AbstractList<T> implements Serializable {
   public List<T> subList(int fromIndex, int toIndex) {
     return Arrays.asList(list).subList(fromIndex, toIndex);
   }
-
 }

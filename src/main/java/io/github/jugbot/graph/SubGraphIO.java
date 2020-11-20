@@ -1,4 +1,4 @@
-package io.github.jugbot;
+package io.github.jugbot.graph;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -12,9 +12,17 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
+
+import org.bukkit.Chunk;
 import org.bukkit.World;
 
-public class IntegrityChunkStorage {
+import io.github.jugbot.App;
+import io.github.jugbot.util.CacheIO;
+
+public class SubGraphIO extends CacheIO<Chunk, SubGraph> {
   private static final boolean WIPE_DB = true;
   private static final String INIT_SQL =
       String.join(
@@ -28,15 +36,15 @@ public class IntegrityChunkStorage {
           ");");
   private static final String READ_SQL = "SELECT object FROM chunkmap WHERE world=? AND x=? AND z=?;";
   private static final String WRITE_SQL = "INSERT OR REPLACE INTO chunkmap VALUES(?, ?, ?, ?);";
-  private static IntegrityChunkStorage instance;
+  private static SubGraphIO instance;
   private Connection connection;
 
-  public static IntegrityChunkStorage Instance() {
-    if (instance == null) instance = new IntegrityChunkStorage();
+  public static SubGraphIO Instance() {
+    if (instance == null) instance = new SubGraphIO();
     return instance;
   }
 
-  private IntegrityChunkStorage() {
+  private SubGraphIO() {
     String url = "jdbc:sqlite:" + App.Instance().getDataFolder() + "/chunkdata.db";
     App.Instance().getLogger().fine("Connecting to database at " + url);
     try {
@@ -57,7 +65,7 @@ public class IntegrityChunkStorage {
     }
   }
 
-  public void saveChunk(IntegrityChunk chunk) {
+  public void saveChunk(SubGraph chunk) {
     App.Instance().getLogger().fine("Save Chunk");
     try {
       PreparedStatement statement = connection.prepareStatement(WRITE_SQL);
@@ -74,7 +82,7 @@ public class IntegrityChunkStorage {
     }
   }
 
-  public IntegrityChunk loadChunk(String worldName, int x, int z) {
+  public SubGraph loadChunk(String worldName, int x, int z) {
     App.Instance().getLogger().fine("Load Chunk");
     try {
       PreparedStatement statement = connection.prepareStatement(READ_SQL);
@@ -83,7 +91,7 @@ public class IntegrityChunkStorage {
       statement.setInt(3, z);
       ResultSet set = statement.executeQuery();
       if (set.isClosed()) return null;
-      return (IntegrityChunk) deserialize(set.getBinaryStream("object"));
+      return (SubGraph) deserialize(set.getBinaryStream("object"));
     } catch (SQLException e) {
       App.Instance().getLogger().fine(READ_SQL);
       App.Instance().getLogger().fine(e.getMessage());
@@ -108,5 +116,17 @@ public class IntegrityChunkStorage {
     oos.writeObject(object);
     oos.close();
     return baos.toByteArray();
+  }
+
+  @Override
+  public void write(Chunk key, SubGraph subGraph) {
+    // TODO Auto-generated method stub
+
+  }
+
+  @Override
+  public SubGraph read(Chunk key) {
+    // TODO Auto-generated method stub
+    return null;
   }
 }
