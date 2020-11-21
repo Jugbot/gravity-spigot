@@ -22,9 +22,13 @@ public class MaxFlow {
   private MaxFlow() {}
 
   public static void createEdge(MutableNetwork<Vertex, Edge> graph, Vertex u, Vertex v, float cap) {
-    Optional<Edge> existing = graph.edgeConnecting(u, v);
-    if (existing.isPresent()) existing.get().cap = cap;
-    else graph.addEdge(u, v, new Edge(cap));
+    Edge existing = null;
+    if (graph.nodes().contains(u) && graph.nodes().contains(v)) existing = graph.edgeConnectingOrNull(u, v);
+    if (existing != null) {
+      existing.cap = cap;
+    } else {
+      graph.addEdge(u, v, new Edge(cap));
+    }
     // Add back edge for maxflow
     if (graph.edgesConnecting(v, u).isEmpty()) {
       graph.addEdge(v, u, new Edge(0));
@@ -32,9 +36,13 @@ public class MaxFlow {
   }
 
   private static void createEdgeOrIncrement(MutableNetwork<Vertex, Edge> graph, Vertex u, Vertex v, float cap) {
-    Optional<Edge> existing = graph.edgeConnecting(u, v);
-    if (existing.isPresent()) existing.get().cap += cap;
-    else graph.addEdge(u, v, new Edge(cap));
+    Edge existing = null;
+    if (graph.nodes().contains(u) && graph.nodes().contains(v)) existing = graph.edgeConnectingOrNull(u, v);
+    if (existing != null) {
+      existing.cap += cap;
+    } else {
+      graph.addEdge(u, v, new Edge(cap));
+    }
     // Add back edge for maxflow
     if (graph.edgesConnecting(v, u).isEmpty()) {
       graph.addEdge(v, u, new Edge(0));
@@ -212,7 +220,7 @@ public class MaxFlow {
     // return 0;
     if (src.equals(dest)) return f;
     if (!ptr.containsKey(src)) {
-      ptr.put(src, graph.outEdges(src));
+      ptr.put(src, new HashSet<>(graph.outEdges(src)));
     }
     while (!ptr.get(src).isEmpty()) {
       Edge e = ptr.get(src).iterator().next();

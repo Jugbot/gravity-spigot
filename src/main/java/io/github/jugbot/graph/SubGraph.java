@@ -43,7 +43,7 @@ public class SubGraph implements MutableNetwork<Vertex, Edge> {
   // Full chunk state to guaruntee no desyncs
   private ChunkSnapshot snapshot;
   // MaxFlow graph data
-  private MutableNetwork<Vertex, Edge> network = NetworkBuilder.directed().nodeOrder(ElementOrder.insertion()).build();
+  private MutableNetwork<Vertex, Edge> network = NetworkBuilder.directed().build();
 
   // consts
   private Vertex src;
