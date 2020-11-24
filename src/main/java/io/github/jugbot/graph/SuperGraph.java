@@ -26,7 +26,7 @@ import com.google.common.graph.ElementOrder;
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.ImmutableNetwork;
 
-public class Graph extends AbstractNetwork<Vertex, Edge> implements MutableNetwork<Vertex, Edge> {
+public class SuperGraph extends AbstractNetwork<Vertex, Edge> implements MutableNetwork<Vertex, Edge> {
   // graphs stored by chunk coordinates
   private Table<Integer, Integer, SubGraph> subgraphs = HashBasedTable.create();
   // for misc temporary mutation methods

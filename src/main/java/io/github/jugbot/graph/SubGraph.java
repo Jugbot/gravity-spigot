@@ -65,7 +65,8 @@ public class SubGraph implements MutableNetwork<Vertex, Edge> {
     snapshot = liveChunk.getChunkSnapshot();
     // App.Instance().getLogger().fine(x+ " "+z);
 
-    int itr = 0;
+    // 1 and 2 reserved for temp vertices
+    int itr = 3;
     // Initialize special vertices
     // MaxFlow source / sink
     src = new Vertex(liveChunk, itr++);
@@ -259,7 +260,15 @@ public class SubGraph implements MutableNetwork<Vertex, Edge> {
   public Block[] getIntegrityViolations() {
     List<Vertex> offending = MaxFlow.getOffendingVertices(network, dists, src, dest);
     // Translate vertices to Blocks w/ Locations
-    return offending.stream().map(v -> v.getBlock()).filter(o -> o.isPresent()).map(o -> o.get()).toArray(Block[]::new);
+    return offending.stream()
+        .map(v -> v.getBlockXYZ())
+        .filter(o -> o.isPresent())
+        .map(
+            o -> {
+              int[] xyz = o.get();
+              return this.chunk.getBlock(xyz[0], xyz[1], xyz[2]);
+            })
+        .toArray(Block[]::new);
   }
 
   static EnumMap<IntegrityData, Float> getStructuralData(Material material) {

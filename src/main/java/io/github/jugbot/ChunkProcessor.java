@@ -73,8 +73,10 @@ public class ChunkProcessor {
     //   integrityChunk = SubGraphIO.Instance().loadChunk(chunk.getWorld().getName(), chunk.getX(), chunk.getZ());
     // }
     if (integrityChunk == null) {
-      App.Instance().getLogger().fine("Created Chunk " + chunk.toString());
+      App.Instance().getLogger().fine("Creating Chunk " + chunk.toString());
       integrityChunk = new SubGraph(chunk);
+      App.Instance().getLogger().fine("Created Chunk " + chunk.toString());
+
       // SubGraphIO.Instance().saveChunk(integrityChunk);
     }
     loadedChunks.put(chunk, integrityChunk);

@@ -22,10 +22,11 @@ public class MaxFlow {
   private MaxFlow() {}
 
   public static void createEdge(MutableNetwork<Vertex, Edge> graph, Vertex u, Vertex v, float cap) {
-    Edge existing = null;
-    if (graph.nodes().contains(u) && graph.nodes().contains(v)) existing = graph.edgeConnectingOrNull(u, v);
-    if (existing != null) {
-      existing.cap = cap;
+    graph.addNode(u);
+    graph.addNode(v);
+    Optional<Edge> existing = graph.edgeConnecting(u, v);
+    if (existing.isPresent()) {
+      existing.get().cap = cap;
     } else {
       graph.addEdge(u, v, new Edge(cap));
     }
@@ -36,10 +37,11 @@ public class MaxFlow {
   }
 
   private static void createEdgeOrIncrement(MutableNetwork<Vertex, Edge> graph, Vertex u, Vertex v, float cap) {
-    Edge existing = null;
-    if (graph.nodes().contains(u) && graph.nodes().contains(v)) existing = graph.edgeConnectingOrNull(u, v);
-    if (existing != null) {
-      existing.cap += cap;
+    graph.addNode(u);
+    graph.addNode(v);
+    Optional<Edge> existing = graph.edgeConnecting(u, v);
+    if (existing.isPresent()) {
+      existing.get().cap += cap;
     } else {
       graph.addEdge(u, v, new Edge(cap));
     }
@@ -106,8 +108,9 @@ public class MaxFlow {
     // // flow should be good but level should be set again for consistency
     // dinicBfs(graph, s, t, dist);
     // return -final_flow;
-    Vertex temp_s = new Vertex(null, -1);
-    Vertex temp_t = new Vertex(null, -2);
+    Vertex temp_s = new Vertex(1);
+    Vertex temp_t = new Vertex(2);
+    assert !graph.nodes().contains(temp_s) && !graph.nodes().contains(temp_t) : "Temp nodes should not exist yet!";
     dists.put(temp_s, -1);
     dists.put(temp_t, -1);
     int max_flow = 0;
@@ -222,9 +225,10 @@ public class MaxFlow {
     if (!ptr.containsKey(src)) {
       ptr.put(src, new HashSet<>(graph.outEdges(src)));
     }
-    while (!ptr.get(src).isEmpty()) {
-      Edge e = ptr.get(src).iterator().next();
-      ptr.get(src).remove(e);
+    Set<Edge> unvisitedSet;
+    while (!(unvisitedSet = ptr.get(src)).isEmpty()) {
+      Edge e = unvisitedSet.iterator().next();
+      unvisitedSet.remove(e);
       EndpointPair<Vertex> uv = graph.incidentNodes(e);
       if (dists.get(uv.nodeV()) == dists.get(uv.nodeU()) + 1 && e.f < e.cap) {
         float df = dinicDfs(graph, dists, ptr, dest, uv.nodeV(), Math.min(f, e.cap - e.f));

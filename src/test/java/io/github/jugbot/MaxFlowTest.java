@@ -14,26 +14,29 @@ import java.util.Random;
 import java.util.Map.Entry;
 
 import com.google.common.graph.EndpointPair;
+import com.google.common.graph.MutableNetwork;
+import com.google.common.graph.NetworkBuilder;
 
+import org.bukkit.Chunk;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Test;
 
 import io.github.jugbot.graph.Edge;
-import io.github.jugbot.graph.Graph;
 import io.github.jugbot.graph.MaxFlow;
+import io.github.jugbot.graph.SubGraph;
 import io.github.jugbot.graph.Vertex;
 import io.netty.handler.codec.http2.Http2Connection.Endpoint;
 
 public class MaxFlowTest {
 
   private Vertex v(int id) {
-    return new Vertex(null, id);
+    return new Vertex(id + 5);
   }
 
   @Test
   public void returnsMaxFlow() {
-    Graph graph = new Graph();
+    MutableNetwork<Vertex, Edge> graph = NetworkBuilder.directed().build();
     MaxFlow.createEdge(graph, v(0), v(1), 3);
     MaxFlow.createEdge(graph, v(0), v(2), 2);
     MaxFlow.createEdge(graph, v(1), v(2), 4);
@@ -44,7 +47,7 @@ public class MaxFlowTest {
 
   @Test
   public void returnsMaxFlowDisconnected() {
-    Graph graph = new Graph();
+    MutableNetwork<Vertex, Edge> graph = NetworkBuilder.directed().build();
     MaxFlow.createEdge(graph, v(0), v(1), 3);
     MaxFlow.createEdge(graph, v(2), v(0), 2);
     MaxFlow.createEdge(graph, v(1), v(0), 2);
@@ -54,7 +57,7 @@ public class MaxFlowTest {
 
   @Test
   public void returnsMaxFlowAfterIncrementUpdate() {
-    Graph graph = new Graph();
+    MutableNetwork<Vertex, Edge> graph = NetworkBuilder.directed().build();
     MaxFlow.createEdge(graph, v(0), v(1), 3);
     MaxFlow.createEdge(graph, v(0), v(2), 2);
     MaxFlow.createEdge(graph, v(1), v(2), 2);
@@ -70,7 +73,7 @@ public class MaxFlowTest {
 
   @Test
   public void returnsMaxFlowAfterDecrementUpdate() {
-    Graph graph = new Graph();
+    MutableNetwork<Vertex, Edge> graph = NetworkBuilder.directed().build();
     MaxFlow.createEdge(graph, v(0), v(1), 3);
     MaxFlow.createEdge(graph, v(0), v(2), 2);
     MaxFlow.createEdge(graph, v(1), v(2), 2);
@@ -88,7 +91,7 @@ public class MaxFlowTest {
 
   @Test
   public void returnsMaxFlowAfterUpdateEdgeCase01() {
-    Graph graph = new Graph();
+    MutableNetwork<Vertex, Edge> graph = NetworkBuilder.directed().build();
     MaxFlow.createEdge(graph, v(0), v(1), 1);
     MaxFlow.createEdge(graph, v(1), v(0), 12);
     MaxFlow.createEdge(graph, v(0), v(1), 7);
@@ -104,7 +107,7 @@ public class MaxFlowTest {
 
   @Test
   public void returnsMaxFlowAfterUpdateEdgeCase02() {
-    Graph graph = new Graph();
+    MutableNetwork<Vertex, Edge> graph = NetworkBuilder.directed().build();
     MaxFlow.createEdge(graph, v(0), v(1), 33);
     MaxFlow.createEdge(graph, v(1), v(0), 12);
     MaxFlow.createEdge(graph, v(0), v(1), 7);
@@ -170,19 +173,20 @@ public class MaxFlowTest {
   //   assertTrue(badA == badB, badA + " (mod) != " + badB + " (new)");
   // }
 
-  @RepeatedTest(100)
+  @RepeatedTest(10)
   public void updatesEdgesABTest(RepetitionInfo info) {
     Random random = new Random();
     long seed = random.nextLong();
     // seed = 4661834240350113105L;
     System.out.println("[ " + info.getCurrentRepetition() + " ] " + seed);
     random.setSeed(seed);
-    final int V = 16;
+    final int V = 6;
     final int E = V * 2;
-    assert E <= V * (V - 1) : "Graph theory forbids this >:("; // Though you want it to be much less
+    assert V > 0 : "Stupid overflows >:(";
+    assert E / (V - 1) <= V : "Graph theory forbids this >:("; // Though you want it to be much less
 
-    Graph graphA = new Graph();
-    Graph graphB = new Graph();
+    MutableNetwork<Vertex, Edge> graphA = NetworkBuilder.directed().build();
+    MutableNetwork<Vertex, Edge> graphB = NetworkBuilder.directed().build();
     Map<Vertex, Integer> distsA = new HashMap<>();
     Map<Vertex, Integer> distsB = new HashMap<>();
     Vertex u = null, v = null;
@@ -232,6 +236,44 @@ public class MaxFlowTest {
     assertTrue(badA == badB, badA + " (mod) != " + badB + " (new)");
   }
 
+  @Test
+  public void bigMaxFlow() {
+    Random random = new Random();
+    long seed = random.nextLong();
+    // seed = -8461310760728933339L;
+    System.out.println("[ BigFlow ] " + seed);
+    random.setSeed(seed);
+    final int V = 16 * 16 * 256;
+    final int E = V * 6;
+    assert V > 0 : "Stupid overflows >:(";
+    assert E / (V - 1) <= V : "Graph theory forbids this >:("; // Though you want it to be much less
+
+    MutableNetwork<Vertex, Edge> graphA = NetworkBuilder.directed().build();
+    Map<Vertex, Integer> distsA = new HashMap<>();
+    Vertex u = null, v = null;
+    System.out.println("graph =");
+    Map<EndpointPair<Vertex>, Float> toChange = new HashMap<>();
+    for (int i = 0; i < E; ) {
+      int uInt = random.nextInt(V);
+      int vInt = random.nextInt(V);
+      u = v(uInt);
+      v = v(vInt);
+
+      if (u.equals(v)) continue; // avoid self-loops (Error)
+      else i++;
+      int cap = random.nextInt(42);
+      System.out.println("v(" + uInt + "), v(" + vInt + "), " + cap);
+      MaxFlow.createEdge(graphA, u, v, cap);
+    }
+    Vertex s = u;
+    Vertex t = v;
+
+    int resultA = MaxFlow.maxFlow(graphA, distsA, s, t);
+    System.out.println("Graph A (MODIFIED)");
+    // printGraph(graphA);
+    // verifyGraph(graphA, s, t);
+  }
+
   private static int differences(int[] a, int[] b) {
     assert a != null && b != null;
     assert a.length == b.length;
@@ -242,7 +284,7 @@ public class MaxFlowTest {
     return count;
   }
 
-  private static void verifyGraph(Graph graph, Vertex s, Vertex t) {
+  private static void verifyGraph(MutableNetwork<Vertex, Edge> graph, Vertex s, Vertex t) {
     // int[] debt = new int[graph.size()];
     // for (int u = 0; u < graph.size(); u++) {
     //   for (Edge edge : graph.get(u)) {
@@ -261,7 +303,7 @@ public class MaxFlowTest {
     // assertTrue(Arrays.equals(debt, new int[graph.size()]));
   }
 
-  private static void printGraph(Graph graph) {
+  private static void printGraph(MutableNetwork<Vertex, Edge> graph) {
     for (Edge edge : graph.edges()) {
       EndpointPair<Vertex> uv = graph.incidentNodes(edge);
       System.out.println("v(");

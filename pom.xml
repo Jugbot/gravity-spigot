@@ -20,7 +20,7 @@
   <repositories>
     <repository>
       <id>spigotmc-repo</id>
-      <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+      <url>https://hub.spigotmc.org/nexus/content/repositories/releases/</url>
     </repository>
     <repository>
       <id>dmulloy2-repo</id>
@@ -36,6 +36,12 @@
       <version>30.0-jre</version>
       <scope>compile</scope>
     </dependency>
+    <dependency>
+      <groupId>com.github.seeseemelk</groupId>
+      <artifactId>MockBukkit-v1.16</artifactId>
+      <version>0.5.0</version>
+      <scope>test</scope>
+    </dependency>
 
     <!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api -->
     <dependency>
@@ -47,13 +53,13 @@
     <dependency>
       <groupId>org.spigotmc</groupId>
       <artifactId>spigot-api</artifactId>
-      <version>1.16.1-R0.1-SNAPSHOT</version>
+      <version>1.16.3-R0.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.bukkit</groupId>
       <artifactId>craftbukkit</artifactId>
-      <version>1.15.2-R0.1-SNAPSHOT</version>
+      <version>1.16.3</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
