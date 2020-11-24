@@ -180,8 +180,8 @@ public class MaxFlowTest {
     // seed = 4661834240350113105L;
     System.out.println("[ " + info.getCurrentRepetition() + " ] " + seed);
     random.setSeed(seed);
-    final int V = 6;
-    final int E = V * 2;
+    final int V = 16 * 16 * 256 + 2;
+    final int E = V * 4;
     assert V > 0 : "Stupid overflows >:(";
     assert E / (V - 1) <= V : "Graph theory forbids this >:("; // Though you want it to be much less
 
@@ -199,7 +199,8 @@ public class MaxFlowTest {
       v = v(vInt);
 
       if (u.equals(v)) continue; // avoid self-loops (Error)
-      else if (graphA.edgeConnectingOrNull(u, v) != null) continue; // avoid overwriting edge weight
+      else if (graphA.nodes().contains(u) && graphA.nodes().contains(v) && graphA.edgeConnectingOrNull(u, v) != null)
+        continue; // avoid overwriting edge weight
       else i++;
       int cap = random.nextInt(42);
       System.out.println("v(" + uInt + "), v(" + vInt + "), " + cap);
@@ -304,9 +305,9 @@ public class MaxFlowTest {
   }
 
   private static void printGraph(MutableNetwork<Vertex, Edge> graph) {
-    for (Edge edge : graph.edges()) {
-      EndpointPair<Vertex> uv = graph.incidentNodes(edge);
-      System.out.println("v(");
-    }
+    // for (Edge edge : graph.edges()) {
+    //   EndpointPair<Vertex> uv = graph.incidentNodes(edge);
+    //   System.out.println("v(");
+    // }
   }
 }

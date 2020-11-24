@@ -19,7 +19,7 @@ public class VertexTest {
     Chunk mockChunk = new MockChunk();
     assertEquals(new Vertex(101), new Vertex(101));
     assertEquals(new Vertex(1), new Vertex(1));
-    Block block = new MockBlock();
+    Block block = new MockBlock(null);
     assertEquals(new Vertex(block), new Vertex(block));
   }
 

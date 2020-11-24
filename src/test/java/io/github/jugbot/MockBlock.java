@@ -33,7 +33,6 @@ public class MockBlock implements Block {
   @Override
   public void setMetadata(String metadataKey, MetadataValue newMetadataValue) {
     throw new NotImplementedException();
-
   }
 
   @Override
@@ -51,7 +50,6 @@ public class MockBlock implements Block {
   @Override
   public void removeMetadata(String metadataKey, Plugin owningPlugin) {
     throw new NotImplementedException();
-
   }
 
   @Override
@@ -68,7 +66,7 @@ public class MockBlock implements Block {
 
   @Override
   public Block getRelative(int modX, int modY, int modZ) {
-    return new MockBlock(Material.AIR);
+    return new MockBlock(null);
   }
 
   @Override
@@ -152,25 +150,21 @@ public class MockBlock implements Block {
   @Override
   public void setBlockData(BlockData data) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void setBlockData(BlockData data, boolean applyPhysics) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void setType(Material type) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void setType(Material type, boolean applyPhysics) {
     throw new NotImplementedException();
-
   }
 
   @Override
@@ -194,7 +188,6 @@ public class MockBlock implements Block {
   @Override
   public void setBiome(Biome bio) {
     throw new NotImplementedException();
-
   }
 
   @Override

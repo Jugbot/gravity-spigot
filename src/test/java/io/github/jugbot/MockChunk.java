@@ -14,7 +14,7 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.plugin.Plugin;
 
 public class MockChunk implements Chunk {
-  Block[][][] blocks = new MockBlock[16][256][16]; 
+  Block[][][] blocks = new MockBlock[16][256][16];
 
   public MockChunk() {
     final int height = 3;
@@ -22,9 +22,9 @@ public class MockChunk implements Chunk {
       for (int x = 0; x < 16; x++) {
         for (int z = 0; z < 16; z++) {
           if (y < height) {
-            blocks[x][y][z] = new MockBlock();
+            blocks[x][y][z] = new MockBlock(null);
           } else {
-            blocks[x][y][z] = new MockBlock(Material.AIT);
+            blocks[x][y][z] = new MockBlock(null);
           }
         }
       }
@@ -109,7 +109,6 @@ public class MockChunk implements Chunk {
   @Override
   public void setForceLoaded(boolean forced) {
     throw new NotImplementedException();
-
   }
 
   @Override
@@ -135,7 +134,6 @@ public class MockChunk implements Chunk {
   @Override
   public void setInhabitedTime(long ticks) {
     throw new NotImplementedException();
-
   }
 
   @Override

@@ -57,7 +57,7 @@ public class App extends JavaPlugin {
     getServer().getPluginManager().registerEvents(new BlockEventListeners(), this);
     getServer().getPluginManager().registerEvents(new BlockGravityListener(), this);
     getServer().getPluginManager().registerEvents(new BlockChangeListener(), this);
-    
+
     getCommand("gr").setExecutor(new GravityCommand());
     // ProtocolManager manager = ProtocolLibrary.getProtocolManager();
     // manager.addPacketListener(new BlockChanger());
