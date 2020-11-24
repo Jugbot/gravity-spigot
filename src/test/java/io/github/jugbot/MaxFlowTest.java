@@ -17,7 +17,6 @@ import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableNetwork;
 import com.google.common.graph.NetworkBuilder;
 
-import org.bukkit.Chunk;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Test;
@@ -26,7 +25,6 @@ import io.github.jugbot.graph.Edge;
 import io.github.jugbot.graph.MaxFlow;
 import io.github.jugbot.graph.SubGraph;
 import io.github.jugbot.graph.Vertex;
-import io.netty.handler.codec.http2.Http2Connection.Endpoint;
 
 public class MaxFlowTest {
 
