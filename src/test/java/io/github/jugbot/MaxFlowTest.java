@@ -188,7 +188,7 @@ public class MaxFlowTest {
     Map<Vertex, Integer> distsA = new HashMap<>();
     Map<Vertex, Integer> distsB = new HashMap<>();
     Vertex u = null, v = null;
-    System.out.println("graph =");
+    // System.out.println("graph =");
     Map<EndpointPair<Vertex>, Float> toChange = new HashMap<>();
     for (int i = 0; i < E; ) {
       int uInt = random.nextInt(V);
@@ -201,12 +201,12 @@ public class MaxFlowTest {
         continue; // avoid overwriting edge weight
       else i++;
       int cap = random.nextInt(42);
-      System.out.println("v(" + uInt + "), v(" + vInt + "), " + cap);
+      // System.out.println("v(" + uInt + "), v(" + vInt + "), " + cap);
       MaxFlow.createEdge(graphA, u, v, cap);
       if (random.nextFloat() < 0.25) {
         float change_cap = random.nextInt(42);
         toChange.put(EndpointPair.ordered(u, v), change_cap);
-        System.out.println("change -> " + change_cap);
+        // System.out.println("change -> " + change_cap);
         MaxFlow.createEdge(graphB, u, v, change_cap);
       } else {
         MaxFlow.createEdge(graphB, u, v, cap);

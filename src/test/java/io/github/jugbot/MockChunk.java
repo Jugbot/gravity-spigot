@@ -5,6 +5,7 @@ import java.util.Collection;
 import org.apache.commons.lang.NotImplementedException;
 import org.bukkit.Chunk;
 import org.bukkit.ChunkSnapshot;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -14,31 +15,23 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.plugin.Plugin;
 
 public class MockChunk implements Chunk {
-  Block[][][] blocks = new MockBlock[16][256][16];
+  final MockChunkSnapshot snapshot;
+  final int x, z;
 
-  public MockChunk() {
-    final int height = 3;
-    for (int y = 0; y < 256; y++) {
-      for (int x = 0; x < 16; x++) {
-        for (int z = 0; z < 16; z++) {
-          if (y < height) {
-            blocks[x][y][z] = new MockBlock(null);
-          } else {
-            blocks[x][y][z] = new MockBlock(null);
-          }
-        }
-      }
-    }
+  public MockChunk(int x, int z) {
+    this.x = x;
+    this.z = z;
+    snapshot = new MockChunkSnapshot();
   }
 
   @Override
   public int getX() {
-    return 0;
+    return x;
   }
 
   @Override
   public int getZ() {
-    return 0;
+    return z;
   }
 
   @Override
@@ -48,12 +41,12 @@ public class MockChunk implements Chunk {
 
   @Override
   public Block getBlock(int x, int y, int z) {
-    return blocks[x][y][z];
+    return snapshot.getBlock(x, y, z);
   }
 
   @Override
   public ChunkSnapshot getChunkSnapshot() {
-    throw new NotImplementedException();
+    return snapshot;
   }
 
   @Override

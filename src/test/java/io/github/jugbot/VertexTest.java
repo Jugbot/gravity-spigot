@@ -16,10 +16,9 @@ import io.github.jugbot.graph.Edge;
 public class VertexTest {
   @Test
   public void hashes() {
-    Chunk mockChunk = new MockChunk();
     assertEquals(new Vertex(101), new Vertex(101));
     assertEquals(new Vertex(1), new Vertex(1));
-    Block block = new MockBlock(null);
+    Block block = MockBlock.Empty();
     assertEquals(new Vertex(block), new Vertex(block));
   }
 

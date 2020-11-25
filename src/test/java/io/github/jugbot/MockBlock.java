@@ -25,9 +25,18 @@ import org.bukkit.util.Vector;
 
 public class MockBlock implements Block {
   BlockData blockData;
+  int x, y, z;
 
-  public MockBlock(BlockData mat) {
+  // ez testing
+  static Block Empty() {
+    return new MockBlock(new MockBlockData(Material.AIR), 10, 21, 53);
+  }
+
+  public MockBlock(BlockData mat, int x, int y, int z) {
     this.blockData = mat;
+    this.x = x;
+    this.y = y;
+    this.z = z;
   }
 
   @Override
@@ -60,31 +69,27 @@ public class MockBlock implements Block {
 
   @Override
   public BlockData getBlockData() {
-    throw new NotImplementedException();
+    return blockData;
     // return null;
   }
 
   @Override
   public Block getRelative(int modX, int modY, int modZ) {
-    return new MockBlock(null);
+    return MockWorld.Instance().getBlockAt(x + modX, y + modY, z + modZ);
   }
 
   @Override
   public Block getRelative(BlockFace face) {
-    throw new NotImplementedException();
-    // return null;
-  }
-
+    return getRelative(face, 1);
+}
   @Override
   public Block getRelative(BlockFace face, int distance) {
-    throw new NotImplementedException();
-    // return null;
+    return getRelative(face.getModX() * distance, face.getModY() * distance, face.getModZ() * distance);
   }
 
   @Override
   public Material getType() {
-    throw new NotImplementedException();
-    // return null;
+    return blockData.getMaterial();
   }
 
   @Override
@@ -113,20 +118,17 @@ public class MockBlock implements Block {
 
   @Override
   public int getX() {
-    throw new NotImplementedException();
-    // return 0;
+    return x;
   }
 
   @Override
   public int getY() {
-    throw new NotImplementedException();
-    // return 0;
+    return y;
   }
 
   @Override
   public int getZ() {
-    throw new NotImplementedException();
-    // return 0;
+    return z;
   }
 
   @Override
@@ -309,5 +311,10 @@ public class MockBlock implements Block {
   public boolean applyBoneMeal(BlockFace arg0) {
     throw new NotImplementedException();
     // return false;
+  }
+
+  @Override
+  public int hashCode() {
+    return this.y << 24 ^ this.x ^ this.z;
   }
 }

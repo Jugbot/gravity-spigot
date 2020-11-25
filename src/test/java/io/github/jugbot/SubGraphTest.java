@@ -6,32 +6,30 @@ import org.bukkit.World;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 
-import be.seeseemelk.mockbukkit.MockBukkit;
-import be.seeseemelk.mockbukkit.ServerMock;
-import be.seeseemelk.mockbukkit.WorldMock;
+import static org.mockito.Mockito.*;
 import io.github.jugbot.graph.SubGraph;
 
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+
+
+
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(Config.class)
 public class SubGraphTest {
-  private ServerMock server;
-  private App plugin;
-  private World world;
-
-  @Before
-  public void setUp() {
-    server = MockBukkit.mock();
-    plugin = (App) MockBukkit.load(App.class);
-    world = new WorldMock(Material.GRASS, 2);
-  }
-
-  @After
-  public void tearDown() {
-    MockBukkit.unmock();
-  }
 
   @Test
-  public void mockedChunk() {
-    Chunk chunk = world.getChunkAt(0, 0);
-    new SubGraph(chunk);
+  public void mockedChunk() throws Exception {
+    Config config = mock(Config.class);
+    PowerMockito.whenNew(Config.class).withNoArguments().thenReturn(config);
+    when(Config.Instance()).thenReturn(config);
+    when(config.getBlockData()).thenReturn(new BlockData());
+    MockWorld mocked = MockWorld.Instance();
+    SubGraph subject = new SubGraph(mocked.getChunkAt(0, 0));
+    subject.update(mocked.getChunkAt(0, 0).getChunkSnapshot());
   }
 }
