@@ -1,8 +1,5 @@
 package io.github.jugbot.graph;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
@@ -10,33 +7,24 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.Map.Entry;
 
 import com.google.common.graph.ElementOrder;
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.Graph;
 import com.google.common.graph.MutableNetwork;
 import com.google.common.graph.NetworkBuilder;
-import com.google.common.graph.ImmutableNetwork;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.ChunkSnapshot;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.data.BlockData;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import io.github.jugbot.util.Constants;
-import io.github.jugbot.graph.MaxFlow;
 import io.github.jugbot.App;
 import io.github.jugbot.Config;
 import io.github.jugbot.IntegrityData;
-import io.github.jugbot.graph.Edge;
-import io.github.jugbot.util.DefaultList;
 
 public class SubGraph implements MutableNetwork<Vertex, Edge> {
   private final Chunk chunk;
@@ -176,38 +164,6 @@ public class SubGraph implements MutableNetwork<Vertex, Edge> {
 
   /** Update chunk with added / removed blocks Significant speed improvement compared to re-creation */
   public void update(ChunkSnapshot newSnapshot) {
-    // for (int index = 0; index < snapshot.length; index++) {
-    // int x = x(index);
-    // int y = y(index);
-    // int z = z(index);
-    // Material newMaterial = newSnapshot.getBlockType(x, y, z);
-    // Material oldMaterial = snapshot[index];
-    // // Update snapshot
-    // snapshot[index] = newMaterial;
-    // // If there is no structural change, do nothing
-    // if (newMaterial == oldMaterial) continue;
-    // if (!isStructural(oldMaterial) && !isStructural(newMaterial)) continue;
-    // App.Instance()
-    // .getLogger()
-    // .fine("Change from " + oldMaterial + " to " + newMaterial + " at " + x + ", "
-    // + y + ", " + z);
-    // // Change edge weights to the new data
-    // EnumMap<IntegrityData, Integer> data = getStructuralData(newMaterial);
-    // // Record edge weights to be changed
-    // for (IntegrityData edgeType : data.keySet()) {
-    // // Existing edge / vertex may not exist
-    // if (graph.get(index).get(edgeType.ordinal()) == null) {
-    // App.Instance().getLogger().fine("Null edge: " + edgeType);
-    // continue;
-    // }
-    // if (edgeType == IntegrityData.MASS) {
-    // toChange.add(new int[] {src, graph.get(index).get(edgeType.ordinal()).rev,
-    // data.get(edgeType)});
-    // } else {
-    // toChange.add(new int[] {index, edgeType.ordinal(), data.get(edgeType)});
-    // }
-    // }
-    // }
     Map<EndpointPair<Vertex>, Float> toChange = new HashMap<>();
 
     for (int y = 0; y < 256; y++) {

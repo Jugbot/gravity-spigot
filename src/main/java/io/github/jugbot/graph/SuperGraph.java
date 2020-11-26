@@ -1,30 +1,20 @@
 package io.github.jugbot.graph;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.google.common.graph.MutableNetwork;
-import com.google.common.graph.Network;
-import com.google.common.graph.NetworkBuilder;
 import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
 import com.google.common.collect.Table;
 import com.google.common.graph.AbstractNetwork;
 import com.google.common.graph.ElementOrder;
 import com.google.common.graph.EndpointPair;
-import com.google.common.graph.ImmutableNetwork;
+import com.google.common.graph.MutableNetwork;
+import com.google.common.graph.Network;
+import com.google.common.graph.NetworkBuilder;
 
 public class SuperGraph extends AbstractNetwork<Vertex, Edge> implements MutableNetwork<Vertex, Edge> {
   // graphs stored by chunk coordinates

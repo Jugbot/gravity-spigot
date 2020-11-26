@@ -12,12 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
-
 import org.bukkit.Chunk;
-import org.bukkit.World;
 
 import io.github.jugbot.App;
 import io.github.jugbot.util.CacheIO;

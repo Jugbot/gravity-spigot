@@ -1,7 +1,5 @@
 package io.github.jugbot.graph;
 
-import java.io.Serializable;
-
 public class Edge {
   public float cap;
   public float f = 0;

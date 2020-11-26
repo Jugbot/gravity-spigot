@@ -1,14 +1,11 @@
 package io.github.jugbot.commands;
 
-import java.lang.ref.Reference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
 import org.bukkit.Location;
-import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
@@ -19,10 +16,7 @@ import org.bukkit.entity.Player;
 
 import io.github.jugbot.App;
 import io.github.jugbot.BlockChangeEvent;
-import io.github.jugbot.BlockData;
 import io.github.jugbot.ChunkProcessor;
-import io.github.jugbot.IntegrityData;
-import io.github.jugbot.graph.Edge;
 
 public class GravityCommand implements CommandExecutor {
 

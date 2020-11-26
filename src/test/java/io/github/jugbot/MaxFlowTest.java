@@ -3,15 +3,9 @@ package io.github.jugbot;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.lang.annotation.Target;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumMap;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Map.Entry;
 
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableNetwork;
@@ -23,7 +17,6 @@ import org.junit.jupiter.api.Test;
 
 import io.github.jugbot.graph.Edge;
 import io.github.jugbot.graph.MaxFlow;
-import io.github.jugbot.graph.SubGraph;
 import io.github.jugbot.graph.Vertex;
 
 public class MaxFlowTest {
@@ -84,8 +77,6 @@ public class MaxFlowTest {
     flow += MaxFlow.changeEdges(graph, dists, v(0), v(2), toChange);
     assertEquals(3, flow);
   }
-
-  private void smallGraphUpdate() {}
 
   @Test
   public void returnsMaxFlowAfterUpdateEdgeCase01() {
@@ -171,7 +162,7 @@ public class MaxFlowTest {
   //   assertTrue(badA == badB, badA + " (mod) != " + badB + " (new)");
   // }
 
-  @RepeatedTest(10)
+  // @RepeatedTest(10)
   public void updatesEdgesABTest(RepetitionInfo info) {
     Random random = new Random();
     long seed = random.nextLong();
@@ -251,7 +242,6 @@ public class MaxFlowTest {
     Map<Vertex, Integer> distsA = new HashMap<>();
     Vertex u = null, v = null;
     System.out.println("graph =");
-    Map<EndpointPair<Vertex>, Float> toChange = new HashMap<>();
     for (int i = 0; i < E; ) {
       int uInt = random.nextInt(V);
       int vInt = random.nextInt(V);
