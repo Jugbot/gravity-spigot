@@ -278,7 +278,7 @@ public class MaxFlow {
         float df = dinicDfs(graph, dists, ptr, dest, src, Float.POSITIVE_INFINITY);
         if (df == 0) break;
         flow += df;
-        System.out.println(flow  / (double) 65536);
+        System.out.println(flow / (double) 65536);
       }
     }
     return flow;

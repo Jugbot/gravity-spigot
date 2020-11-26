@@ -27,23 +27,20 @@ public class SubGraphTest {
     PowerMockito.whenNew(Config.class).withNoArguments().thenReturn(config);
     when(Config.Instance()).thenReturn(config);
     when(config.getBlockData()).thenReturn(new BlockData());
-    MockWorld.HEIGHT = 32;
+    MockWorld.HEIGHT = 4;
     mockedWorld = MockWorld.Instance();
     subject = new SubGraph(mockedWorld.getChunkAt(0, 0));
   }
 
   @Test
   public void maxFlow() {
-    Vertex src = new Vertex(mockedWorld.getChunkAt(0,0), 3);
-    Vertex dest = new Vertex(mockedWorld.getChunkAt(0,0), 4);
+    Vertex src = new Vertex(mockedWorld.getChunkAt(0, 0), 3);
+    Vertex dest = new Vertex(mockedWorld.getChunkAt(0, 0), 4);
     assertEquals(16 * 16 * MockWorld.HEIGHT, MaxFlow.maxFlow(subject, subject.dists, src, dest));
     System.out.println("done");
   }
 
-  @Test
   public void mockedChunk() throws Exception {
     subject.update(mockedWorld.getChunkAt(0, 0).getChunkSnapshot());
   }
-
-
 }
