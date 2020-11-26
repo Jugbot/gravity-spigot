@@ -1,21 +1,18 @@
 package io.github.jugbot.graph;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
 
-import javax.lang.model.type.ArrayType;
-import javax.swing.text.html.parser.Entity;
-
-import com.google.common.graph.ElementOrder;
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableNetwork;
 
-import org.bukkit.block.data.type.EndPortalFrame;
-
-import com.google.common.graph.MutableNetwork;
-
 import io.github.jugbot.App;
-import io.github.jugbot.IntegrityData;
 
 public class MaxFlow {
 
@@ -108,6 +105,7 @@ public class MaxFlow {
     // // flow should be good but level should be set again for consistency
     // dinicBfs(graph, s, t, dist);
     // return -final_flow;
+    MaxFlow.maxFlow(graph, dists, s, t); // makes sure flow is already at maximum
     Vertex temp_s = new Vertex(1);
     Vertex temp_t = new Vertex(2);
     assert !graph.nodes().contains(temp_s) && !graph.nodes().contains(temp_t) : "Temp nodes should not exist yet!";
@@ -177,12 +175,12 @@ public class MaxFlow {
     // }
     // return dist[dest] > -1;
 
-    // dists.clear();
-    for (Vertex v : graph.nodes()) {
-      dists.put(v, -1);
-    }
-    assert (dists.containsKey(src) && dists.get(src) == -1 && dists.containsKey(dest) && dists.get(dest) == -1)
-        : "Vertex is not in the graph (get the real one first!)";
+    // for (Vertex v : graph.nodes()) {
+    //   dists.put(v, -1);
+    // }
+    dists.clear();
+    // assert (dists.containsKey(src) && dists.get(src) == -1 && dists.containsKey(dest) && dists.get(dest) == -1)
+    //     : "Vertex is not in the graph (get the real one first!)";
     dists.put(src, 0);
     Vertex[] Q = new Vertex[graph.nodes().size()];
     int sizeQ = 0;
@@ -191,13 +189,13 @@ public class MaxFlow {
       Vertex u = Q[i];
       for (Vertex v : graph.successors(u)) {
         Edge e = graph.edgeConnectingOrNull(u, v);
-        if (dists.get(v) < 0 && e.f < e.cap) {
-          dists.put(v, dists.get(u) + 1);
+        if (dists.getOrDefault(v, -1) < 0 && e.f < e.cap) {
+          dists.put(v, dists.getOrDefault(u, -1) + 1);
           Q[sizeQ++] = v;
         }
       }
     }
-    return dists.get(dest) > -1;
+    return dists.getOrDefault(dest, -1) > -1;
   }
 
   private static float dinicDfs(
@@ -230,7 +228,7 @@ public class MaxFlow {
       Edge e = unvisitedSet.iterator().next();
       unvisitedSet.remove(e);
       EndpointPair<Vertex> uv = graph.incidentNodes(e);
-      if (dists.get(uv.nodeV()) == dists.get(uv.nodeU()) + 1 && e.f < e.cap) {
+      if (dists.getOrDefault(uv.nodeV(), -1) == dists.getOrDefault(uv.nodeU(), -1) + 1 && e.f < e.cap) {
         float df = dinicDfs(graph, dists, ptr, dest, uv.nodeV(), Math.min(f, e.cap - e.f));
         if (df > 0) {
           e.f += df;
@@ -280,6 +278,7 @@ public class MaxFlow {
         float df = dinicDfs(graph, dists, ptr, dest, src, Float.POSITIVE_INFINITY);
         if (df == 0) break;
         flow += df;
+        System.out.println(flow  / (double) 65536);
       }
     }
     return flow;
@@ -292,7 +291,7 @@ public class MaxFlow {
     List<Vertex> result = new ArrayList<>();
     for (Edge e : graph.outEdges(src)) {
       Vertex v = graph.incidentNodes(e).nodeV();
-      if (dists.get(v) > 0 && e.cap > 0) {
+      if (dists.getOrDefault(v, -1) > 0 && e.cap > 0) {
         result.add(v);
       }
     }

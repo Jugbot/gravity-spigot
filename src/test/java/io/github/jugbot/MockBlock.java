@@ -81,7 +81,8 @@ public class MockBlock implements Block {
   @Override
   public Block getRelative(BlockFace face) {
     return getRelative(face, 1);
-}
+  }
+
   @Override
   public Block getRelative(BlockFace face, int distance) {
     return getRelative(face.getModX() * distance, face.getModY() * distance, face.getModZ() * distance);

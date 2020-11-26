@@ -1,35 +1,49 @@
 package io.github.jugbot;
 
-import org.bukkit.Chunk;
-import org.bukkit.Material;
-import org.bukkit.World;
-import org.junit.After;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-
-import static org.mockito.Mockito.*;
-import io.github.jugbot.graph.SubGraph;
-
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-
+import io.github.jugbot.graph.MaxFlow;
+import io.github.jugbot.graph.SubGraph;
+import io.github.jugbot.graph.Vertex;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(Config.class)
 public class SubGraphTest {
+  private SubGraph subject;
+  private MockWorld mockedWorld;
 
-  @Test
-  public void mockedChunk() throws Exception {
+  @Before
+  public void setup() throws Exception {
     Config config = mock(Config.class);
     PowerMockito.whenNew(Config.class).withNoArguments().thenReturn(config);
     when(Config.Instance()).thenReturn(config);
     when(config.getBlockData()).thenReturn(new BlockData());
-    MockWorld mocked = MockWorld.Instance();
-    SubGraph subject = new SubGraph(mocked.getChunkAt(0, 0));
-    subject.update(mocked.getChunkAt(0, 0).getChunkSnapshot());
+    MockWorld.HEIGHT = 32;
+    mockedWorld = MockWorld.Instance();
+    subject = new SubGraph(mockedWorld.getChunkAt(0, 0));
   }
+
+  @Test
+  public void maxFlow() {
+    Vertex src = new Vertex(mockedWorld.getChunkAt(0,0), 3);
+    Vertex dest = new Vertex(mockedWorld.getChunkAt(0,0), 4);
+    assertEquals(16 * 16 * MockWorld.HEIGHT, MaxFlow.maxFlow(subject, subject.dists, src, dest));
+    System.out.println("done");
+  }
+
+  @Test
+  public void mockedChunk() throws Exception {
+    subject.update(mockedWorld.getChunkAt(0, 0).getChunkSnapshot());
+  }
+
+
 }

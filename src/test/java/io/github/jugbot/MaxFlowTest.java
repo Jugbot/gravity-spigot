@@ -238,7 +238,7 @@ public class MaxFlowTest {
   @Test
   public void bigMaxFlow() {
     Random random = new Random();
-    long seed = random.nextLong();
+    long seed = System.currentTimeMillis();
     // seed = -8461310760728933339L;
     System.out.println("[ BigFlow ] " + seed);
     random.setSeed(seed);

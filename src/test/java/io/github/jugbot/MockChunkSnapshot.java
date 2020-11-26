@@ -11,11 +11,10 @@ public class MockChunkSnapshot implements ChunkSnapshot {
   Block[][][] blocks = new MockBlock[16][256][16];
 
   public MockChunkSnapshot() {
-    final int height = 3;
     for (int y = 0; y < 256; y++) {
       for (int x = 0; x < 16; x++) {
         for (int z = 0; z < 16; z++) {
-          if (y < height) {
+          if (y < MockWorld.HEIGHT) {
             blocks[x][y][z] = new MockBlock(new MockBlockData(Material.DIRT), x, y, z);
           } else {
             blocks[x][y][z] = new MockBlock(new MockBlockData(Material.AIR), x, y, z);

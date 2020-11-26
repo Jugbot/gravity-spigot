@@ -176,7 +176,6 @@ public class SubGraph implements MutableNetwork<Vertex, Edge> {
 
   /** Update chunk with added / removed blocks Significant speed improvement compared to re-creation */
   public void update(ChunkSnapshot newSnapshot) {
-    Map<EndpointPair<Vertex>, Float> toChange = new HashMap<>();
     // for (int index = 0; index < snapshot.length; index++) {
     // int x = x(index);
     // int y = y(index);
@@ -209,6 +208,7 @@ public class SubGraph implements MutableNetwork<Vertex, Edge> {
     // }
     // }
     // }
+    Map<EndpointPair<Vertex>, Float> toChange = new HashMap<>();
 
     for (int y = 0; y < 256; y++) {
       for (int x = 0; x < 16; x++) {

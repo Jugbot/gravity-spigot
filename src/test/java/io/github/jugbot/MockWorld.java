@@ -57,6 +57,7 @@ import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
 public class MockWorld implements World {
+  public static int HEIGHT = 0;
 
   static MockWorld instance = null;
 
@@ -67,8 +68,7 @@ public class MockWorld implements World {
   }
 
   public static MockWorld Instance() {
-    if (instance == null)
-    instance = new MockWorld();
+    if (instance == null) instance = new MockWorld();
     return instance;
   }
 
@@ -81,7 +81,6 @@ public class MockWorld implements World {
   @Override
   public void sendPluginMessage(Plugin arg0, String arg1, byte[] arg2) {
     throw new NotImplementedException();
-
   }
 
   @Override
@@ -99,13 +98,11 @@ public class MockWorld implements World {
   @Override
   public void removeMetadata(String arg0, Plugin arg1) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void setMetadata(String arg0, MetadataValue arg1) {
     throw new NotImplementedException();
-
   }
 
   @Override
@@ -163,8 +160,8 @@ public class MockWorld implements World {
   }
 
   @Override
-  public boolean createExplosion(double arg0, double arg1, double arg2, float arg3, boolean arg4, boolean arg5,
-      Entity arg6) {
+  public boolean createExplosion(
+      double arg0, double arg1, double arg2, float arg3, boolean arg4, boolean arg5, Entity arg6) {
     throw new NotImplementedException();
     // return false;
   }
@@ -238,8 +235,7 @@ public class MockWorld implements World {
   @Override
   public Block getBlockAt(int x, int y, int z) {
     Chunk optional = chunkmap.get(Math.floorDiv(x, 16), Math.floorDiv(z, 16));
-    if (optional == null)
-      return new MockBlock(new MockBlockData(Material.AIR), x, y, z);
+    if (optional == null) return new MockBlock(new MockBlockData(Material.AIR), x, y, z);
     return optional.getBlock(x % 16, y, z % 16);
   }
 
@@ -465,8 +461,8 @@ public class MockWorld implements World {
   }
 
   @Override
-  public Collection<Entity> getNearbyEntities(Location arg0, double arg1, double arg2, double arg3,
-      Predicate<Entity> arg4) {
+  public Collection<Entity> getNearbyEntities(
+      Location arg0, double arg1, double arg2, double arg3, Predicate<Entity> arg4) {
     throw new NotImplementedException();
     // return null;
   }
@@ -690,13 +686,11 @@ public class MockWorld implements World {
   @Override
   public void loadChunk(Chunk arg0) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void loadChunk(int arg0, int arg1) {
     throw new NotImplementedException();
-
   }
 
   @Override
@@ -720,54 +714,52 @@ public class MockWorld implements World {
   @Override
   public void playEffect(Location arg0, Effect arg1, int arg2) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public <T> void playEffect(Location arg0, Effect arg1, T arg2) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void playEffect(Location arg0, Effect arg1, int arg2, int arg3) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public <T> void playEffect(Location arg0, Effect arg1, T arg2, int arg3) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void playSound(Location arg0, Sound arg1, float arg2, float arg3) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void playSound(Location arg0, String arg1, float arg2, float arg3) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void playSound(Location arg0, Sound arg1, SoundCategory arg2, float arg3, float arg4) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void playSound(Location arg0, String arg1, SoundCategory arg2, float arg3, float arg4) {
     throw new NotImplementedException();
-
   }
 
   @Override
-  public RayTraceResult rayTrace(Location arg0, Vector arg1, double arg2, FluidCollisionMode arg3, boolean arg4,
-      double arg5, Predicate<Entity> arg6) {
+  public RayTraceResult rayTrace(
+      Location arg0,
+      Vector arg1,
+      double arg2,
+      FluidCollisionMode arg3,
+      boolean arg4,
+      double arg5,
+      Predicate<Entity> arg6) {
     throw new NotImplementedException();
     // return null;
   }
@@ -835,61 +827,51 @@ public class MockWorld implements World {
   @Override
   public void removePluginChunkTickets(Plugin arg0) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void save() {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void setAmbientSpawnLimit(int arg0) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void setAnimalSpawnLimit(int arg0) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void setAutoSave(boolean arg0) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void setBiome(int arg0, int arg1, Biome arg2) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void setBiome(int arg0, int arg1, int arg2, Biome arg3) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void setChunkForceLoaded(int arg0, int arg1, boolean arg2) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void setDifficulty(Difficulty arg0) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void setFullTime(long arg0) {
     throw new NotImplementedException();
-
   }
 
   @Override
@@ -907,31 +889,26 @@ public class MockWorld implements World {
   @Override
   public void setHardcore(boolean arg0) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void setKeepSpawnInMemory(boolean arg0) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void setMonsterSpawnLimit(int arg0) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void setPVP(boolean arg0) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void setSpawnFlags(boolean arg0, boolean arg1) {
     throw new NotImplementedException();
-
   }
 
   @Override
@@ -955,73 +932,61 @@ public class MockWorld implements World {
   @Override
   public void setStorm(boolean arg0) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void setThunderDuration(int arg0) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void setThundering(boolean arg0) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void setTicksPerAmbientSpawns(int arg0) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void setTicksPerAnimalSpawns(int arg0) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void setTicksPerMonsterSpawns(int arg0) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void setTicksPerWaterAmbientSpawns(int arg0) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void setTicksPerWaterSpawns(int arg0) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void setTime(long arg0) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void setWaterAmbientSpawnLimit(int arg0) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void setWaterAnimalSpawnLimit(int arg0) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void setWeatherDuration(int arg0) {
     throw new NotImplementedException();
-
   }
 
   @Override
@@ -1075,93 +1040,114 @@ public class MockWorld implements World {
   @Override
   public void spawnParticle(Particle arg0, Location arg1, int arg2) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public <T> void spawnParticle(Particle arg0, Location arg1, int arg2, T arg3) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void spawnParticle(Particle arg0, double arg1, double arg2, double arg3, int arg4) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public <T> void spawnParticle(Particle arg0, double arg1, double arg2, double arg3, int arg4, T arg5) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public void spawnParticle(Particle arg0, Location arg1, int arg2, double arg3, double arg4, double arg5) {
     throw new NotImplementedException();
-
   }
 
   @Override
   public <T> void spawnParticle(Particle arg0, Location arg1, int arg2, double arg3, double arg4, double arg5, T arg6) {
     throw new NotImplementedException();
-
   }
 
   @Override
-  public void spawnParticle(Particle arg0, Location arg1, int arg2, double arg3, double arg4, double arg5,
-      double arg6) {
+  public void spawnParticle(
+      Particle arg0, Location arg1, int arg2, double arg3, double arg4, double arg5, double arg6) {
     throw new NotImplementedException();
-
   }
 
   @Override
-  public void spawnParticle(Particle arg0, double arg1, double arg2, double arg3, int arg4, double arg5, double arg6,
-      double arg7) {
+  public void spawnParticle(
+      Particle arg0, double arg1, double arg2, double arg3, int arg4, double arg5, double arg6, double arg7) {
     throw new NotImplementedException();
-
   }
 
   @Override
-  public <T> void spawnParticle(Particle arg0, Location arg1, int arg2, double arg3, double arg4, double arg5,
-      double arg6, T arg7) {
+  public <T> void spawnParticle(
+      Particle arg0, Location arg1, int arg2, double arg3, double arg4, double arg5, double arg6, T arg7) {
     throw new NotImplementedException();
-
   }
 
   @Override
-  public <T> void spawnParticle(Particle arg0, double arg1, double arg2, double arg3, int arg4, double arg5,
-      double arg6, double arg7, T arg8) {
+  public <T> void spawnParticle(
+      Particle arg0, double arg1, double arg2, double arg3, int arg4, double arg5, double arg6, double arg7, T arg8) {
     throw new NotImplementedException();
-
   }
 
   @Override
-  public void spawnParticle(Particle arg0, double arg1, double arg2, double arg3, int arg4, double arg5, double arg6,
-      double arg7, double arg8) {
+  public void spawnParticle(
+      Particle arg0,
+      double arg1,
+      double arg2,
+      double arg3,
+      int arg4,
+      double arg5,
+      double arg6,
+      double arg7,
+      double arg8) {
     throw new NotImplementedException();
-
   }
 
   @Override
-  public <T> void spawnParticle(Particle arg0, Location arg1, int arg2, double arg3, double arg4, double arg5,
-      double arg6, T arg7, boolean arg8) {
+  public <T> void spawnParticle(
+      Particle arg0,
+      Location arg1,
+      int arg2,
+      double arg3,
+      double arg4,
+      double arg5,
+      double arg6,
+      T arg7,
+      boolean arg8) {
     throw new NotImplementedException();
-
   }
 
   @Override
-  public <T> void spawnParticle(Particle arg0, double arg1, double arg2, double arg3, int arg4, double arg5,
-      double arg6, double arg7, double arg8, T arg9) {
+  public <T> void spawnParticle(
+      Particle arg0,
+      double arg1,
+      double arg2,
+      double arg3,
+      int arg4,
+      double arg5,
+      double arg6,
+      double arg7,
+      double arg8,
+      T arg9) {
     throw new NotImplementedException();
-
   }
 
   @Override
-  public <T> void spawnParticle(Particle arg0, double arg1, double arg2, double arg3, int arg4, double arg5,
-      double arg6, double arg7, double arg8, T arg9, boolean arg10) {
+  public <T> void spawnParticle(
+      Particle arg0,
+      double arg1,
+      double arg2,
+      double arg3,
+      int arg4,
+      double arg5,
+      double arg6,
+      double arg7,
+      double arg8,
+      T arg9,
+      boolean arg10) {
     throw new NotImplementedException();
-
   }
 
   @Override
@@ -1205,5 +1191,4 @@ public class MockWorld implements World {
     throw new NotImplementedException();
     // return false;
   }
-  
 }
