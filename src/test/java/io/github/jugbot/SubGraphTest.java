@@ -26,7 +26,7 @@ import org.junit.runners.MethodSorters;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Config.class, App.class})
+@PrepareForTest(Config.class)
 public class SubGraphTest {
   private static SubGraph subject;
   private static MockWorld mockedWorld;
@@ -44,17 +44,17 @@ public class SubGraphTest {
     PowerMockito.whenNew(Config.class).withNoArguments().thenReturn(config);
     when(Config.Instance()).thenReturn(config);
     when(config.getBlockData()).thenReturn(new BlockData());
-    MockWorld.HEIGHT = 4;
+    MockWorld.HEIGHT = 64;
     mockedWorld = MockWorld.Instance();
     subject = new SubGraph(mockedWorld.getChunkAt(0, 0));
+    System.out.println("done");
   }
 
   @Test
   public void step2_maxFlow() {
     Vertex src = new Vertex(mockedWorld.getChunkAt(0, 0), ReservedID.SOURCE);
     Vertex dest = new Vertex(mockedWorld.getChunkAt(0, 0), ReservedID.DEST);
-    assertEquals(16 * 16 * MockWorld.HEIGHT, MaxFlow.maxFlow(subject, subject.dists, src, dest));
-    System.out.println("done");
+    assertEquals(0, MaxFlow.maxFlow(subject, subject.dists, src, dest));
   }
 
   @Test
@@ -63,7 +63,7 @@ public class SubGraphTest {
     // MockBlock offendingBlock = (MockBlock) mockChunk.blocks[0][128][0];//new MockBlock(new
     // MockBlockData(Material.DIRT), 0, 128, 0);
     // ((MockBlockData)offendingBlock.blockData).material = Material.DIRT;
-    Block offending = mockedWorld.getBlockAt(0, 128, 0);
+    Block offending = mockedWorld.getBlockAt(0, 255, 0);
     ((MockBlockData) offending.getBlockData()).material = Material.DIRT;
     subject.update(mockedWorld.getChunkAt(0, 0).getChunkSnapshot());
     assertEquals(1, subject.getIntegrityViolations().length);

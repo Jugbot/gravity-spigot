@@ -10,7 +10,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableNetwork;
 
@@ -65,7 +64,6 @@ public class MaxFlow {
       Vertex t,
       Map<EndpointPair<Vertex>, Float> toChange) {
     // makes sure flow is already at maximum
-    MaxFlow.maxFlow(graph, dists, s, t);
     Vertex temp_s = new Vertex(ReservedID.TEMP_SOURCE);
     Vertex temp_t = new Vertex(ReservedID.TEMP_DEST);
     assert !graph.nodes().contains(temp_s) && !graph.nodes().contains(temp_t) : "Temp nodes should not exist yet!";
@@ -169,7 +167,6 @@ public class MaxFlow {
     return 0;
   }
 
-  @VisibleForTesting
   public static int maxFlow(MutableNetwork<Vertex, Edge> graph, Map<Vertex, Integer> dists, Vertex src, Vertex dest) {
     assert src != dest : "Source vertex cannot be the same as the destination!";
     // shortcut
@@ -189,15 +186,23 @@ public class MaxFlow {
     return flow;
   }
 
+  /**
+   * Returns Vertices in a graph where maxFlow already has been calculated.
+   *
+   * @param graph Directed graph
+   * @param dists The set of vertices reachable from source with flow
+   * @param src Source vertex from which all capacity for flow must be maximum
+   * @param dest Destination Vertex
+   * @return Vertex set that has capacity left over from src
+   */
   public static List<Vertex> getOffendingVertices(
       MutableNetwork<Vertex, Edge> graph, Map<Vertex, Integer> dists, Vertex src, Vertex dest) {
     // TODO: also flag chunk edge violations
-    // if (dists.getOrDefault(dest, -1) == -1)
-    dinicBfs(graph, dists, src, dest);
     List<Vertex> result = new ArrayList<>();
-    for (Edge e : graph.outEdges(src)) {
-      Vertex v = graph.incidentNodes(e).nodeV();
-      if (dists.getOrDefault(v, -1) > 0 && e.cap > 0) {
+    // Call to graph.nodes() preserves order
+    for (Vertex v : graph.nodes()) {
+      Optional<Edge> e = graph.edgeConnecting(src, v);
+      if (dists.getOrDefault(v, -1) > 0 && e.isPresent() && e.get().cap > 0) {
         result.add(v);
       }
     }

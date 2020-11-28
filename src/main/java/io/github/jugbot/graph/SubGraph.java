@@ -31,7 +31,12 @@ public class SubGraph implements MutableNetwork<Vertex, Edge> {
   // Full chunk state to guaruntee no desyncs
   private ChunkSnapshot snapshot;
   // MaxFlow graph data
-  private MutableNetwork<Vertex, Edge> network = NetworkBuilder.directed().build();
+  private MutableNetwork<Vertex, Edge> network =
+      NetworkBuilder.directed()
+          .nodeOrder(ElementOrder.insertion())
+          // .expectedNodeCount(16 * 16 * 256 + 2 * 16 * 256 + 256)
+          // .expectedEdgeCount((16 * 16 * 256 + 2 * 16 * 256 + 256) * 6)
+          .build();
 
   // consts
   private Vertex src;
@@ -90,6 +95,7 @@ public class SubGraph implements MutableNetwork<Vertex, Edge> {
         }
       }
     }
+    MaxFlow.maxFlow(this, dists, src, dest);
   }
 
   private void createVertex(Block block, EnumMap<IntegrityData, Float> data) {
@@ -227,7 +233,8 @@ public class SubGraph implements MutableNetwork<Vertex, Edge> {
         .map(
             o -> {
               int[] xyz = o.get();
-              return this.chunk.getBlock(xyz[0], xyz[1], xyz[2]);
+              // TODO: send BlockData instead to verify the block being broken
+              return this.chunk.getBlock(xyz[0] & 0xF, xyz[1] & 0xFF, xyz[2] & 0xF);
             })
         .toArray(Block[]::new);
   }
