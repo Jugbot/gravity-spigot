@@ -15,7 +15,7 @@ public enum ReservedID {
   WEST_DEST(12);
 
   private int value;
-  
+
   private ReservedID(int value) {
     this.value = value;
   }
