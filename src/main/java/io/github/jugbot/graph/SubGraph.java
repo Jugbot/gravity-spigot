@@ -53,22 +53,20 @@ public class SubGraph implements MutableNetwork<Vertex, Edge> {
     snapshot = liveChunk.getChunkSnapshot();
     // App.Instance().getLogger().fine(x+ " "+z);
 
-    // 1 and 2 reserved for temp vertices
-    int itr = 3;
     // Initialize special vertices
     // MaxFlow source / sink
-    src = new Vertex(liveChunk, itr++);
-    dest = new Vertex(liveChunk, itr++);
+    src = new Vertex(liveChunk, ReservedID.SOURCE);
+    dest = new Vertex(liveChunk, ReservedID.DEST);
     // Cached connections utility nodes
-    north_src = new Vertex(liveChunk, itr++);
-    east_src = new Vertex(liveChunk, itr++);
-    south_src = new Vertex(liveChunk, itr++);
-    west_src = new Vertex(liveChunk, itr++);
+    north_src = new Vertex(liveChunk, ReservedID.NORTH_SOURCE);
+    east_src = new Vertex(liveChunk, ReservedID.EAST_SOURCE);
+    south_src = new Vertex(liveChunk, ReservedID.SOUTH_SOURCE);
+    west_src = new Vertex(liveChunk, ReservedID.WEST_SOURCE);
 
-    north_dest = new Vertex(liveChunk, itr++);
-    east_dest = new Vertex(liveChunk, itr++);
-    south_dest = new Vertex(liveChunk, itr++);
-    west_dest = new Vertex(liveChunk, itr++);
+    north_dest = new Vertex(liveChunk, ReservedID.NORTH_DEST);
+    east_dest = new Vertex(liveChunk, ReservedID.EAST_DEST);
+    south_dest = new Vertex(liveChunk, ReservedID.SOUTH_DEST);
+    west_dest = new Vertex(liveChunk, ReservedID.WEST_DEST);
 
     MaxFlow.createEdge(network, src, north_src, Float.POSITIVE_INFINITY);
     MaxFlow.createEdge(network, src, east_src, Float.POSITIVE_INFINITY);
@@ -88,7 +86,6 @@ public class SubGraph implements MutableNetwork<Vertex, Edge> {
         for (int z = 0; z < 16; z++) {
           Material material = snapshot.getBlockData(x, y, z).getMaterial();
           EnumMap<IntegrityData, Float> data = getStructuralData(material);
-          if (data == null) continue;
           createVertex(liveChunk.getBlock(x, y, z), data);
         }
       }
@@ -110,23 +107,25 @@ public class SubGraph implements MutableNetwork<Vertex, Edge> {
       toIndex = new Vertex(block.getRelative(BlockFace.UP));
       MaxFlow.createEdge(network, fromIndex, toIndex, data.get(IntegrityData.UP));
     }
+    // Changes must reflect in update()
     if (x > 0) {
       toIndex = new Vertex(block.getRelative(BlockFace.WEST));
       MaxFlow.createEdge(network, fromIndex, toIndex, data.get(IntegrityData.WEST));
     }
-    if (z < 15) {
-      toIndex = new Vertex(block.getRelative(BlockFace.SOUTH));
-      MaxFlow.createEdge(network, fromIndex, toIndex, data.get(IntegrityData.SOUTH));
+    if (z > 0) {
+      toIndex = new Vertex(block.getRelative(BlockFace.NORTH));
+      MaxFlow.createEdge(network, fromIndex, toIndex, data.get(IntegrityData.NORTH));
     }
-    // For NE directions, the edges that lead off-chunk will be created
+    // For SE directions, the edges that lead off-chunk will be created
     // This is for later computation of multi-chunk integrity
-    toIndex = new Vertex(block.getRelative(BlockFace.NORTH));
-    MaxFlow.createEdge(network, fromIndex, toIndex, data.get(IntegrityData.NORTH));
+    // so there are no duplicate edges
+    toIndex = new Vertex(block.getRelative(BlockFace.SOUTH));
+    MaxFlow.createEdge(network, fromIndex, toIndex, data.get(IntegrityData.SOUTH));
     MaxFlow.createEdge(
         network,
         fromIndex,
         toIndex,
-        getStructuralData(block.getRelative(BlockFace.NORTH).getType()).get(IntegrityData.SOUTH));
+        getStructuralData(block.getRelative(BlockFace.SOUTH).getType()).get(IntegrityData.NORTH));
 
     toIndex = new Vertex(block.getRelative(BlockFace.EAST));
     MaxFlow.createEdge(network, fromIndex, toIndex, data.get(IntegrityData.EAST));
@@ -174,32 +173,38 @@ public class SubGraph implements MutableNetwork<Vertex, Edge> {
           // If there is no structural change, do nothing
           if (newMaterial == oldMaterial) continue;
           if (!isStructural(oldMaterial) && !isStructural(newMaterial)) continue;
-          App.Instance()
-              .getLogger()
-              .fine("Change from " + oldMaterial + " to " + newMaterial + " at " + x + ", " + y + ", " + z);
           // Change edge weights to the new data
           EnumMap<IntegrityData, Float> data = getStructuralData(newMaterial);
           // Record edge weights to be changed
           Block block = chunk.getBlock(x, y, z);
           Vertex reference = new Vertex(block);
           toChange.put(EndpointPair.ordered(src, reference), data.get(IntegrityData.MASS));
-          toChange.put(
-              EndpointPair.ordered(reference, new Vertex(block.getRelative(BlockFace.UP))), data.get(IntegrityData.UP));
-          toChange.put(
-              EndpointPair.ordered(reference, new Vertex(block.getRelative(BlockFace.DOWN))),
-              data.get(IntegrityData.DOWN));
-          toChange.put(
-              EndpointPair.ordered(reference, new Vertex(block.getRelative(BlockFace.NORTH))),
-              data.get(IntegrityData.NORTH));
+          if (y != 255) {
+            toChange.put(
+                EndpointPair.ordered(reference, new Vertex(block.getRelative(BlockFace.UP))),
+                data.get(IntegrityData.UP));
+          }
+          if (y != 0) {
+            toChange.put(
+                EndpointPair.ordered(reference, new Vertex(block.getRelative(BlockFace.DOWN))),
+                data.get(IntegrityData.DOWN));
+          }
+          if (z > 0) {
+            toChange.put(
+                EndpointPair.ordered(reference, new Vertex(block.getRelative(BlockFace.NORTH))),
+                data.get(IntegrityData.NORTH));
+          }
+          if (x > 0) {
+            toChange.put(
+                EndpointPair.ordered(reference, new Vertex(block.getRelative(BlockFace.WEST))),
+                data.get(IntegrityData.WEST));
+          }
           toChange.put(
               EndpointPair.ordered(reference, new Vertex(block.getRelative(BlockFace.EAST))),
               data.get(IntegrityData.EAST));
           toChange.put(
               EndpointPair.ordered(reference, new Vertex(block.getRelative(BlockFace.SOUTH))),
               data.get(IntegrityData.SOUTH));
-          toChange.put(
-              EndpointPair.ordered(reference, new Vertex(block.getRelative(BlockFace.WEST))),
-              data.get(IntegrityData.WEST));
         }
       }
     }

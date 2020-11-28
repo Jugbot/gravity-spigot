@@ -24,7 +24,7 @@ import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
 public class MockBlock implements Block {
-  BlockData blockData;
+  public BlockData blockData;
   int x, y, z;
 
   // ez testing
@@ -113,8 +113,7 @@ public class MockBlock implements Block {
 
   @Override
   public World getWorld() {
-    throw new NotImplementedException();
-    // return null;
+    return MockWorld.Instance();
   }
 
   @Override
@@ -317,5 +316,14 @@ public class MockBlock implements Block {
   @Override
   public int hashCode() {
     return this.y << 24 ^ this.x ^ this.z;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (o == this) return true;
+    if (!(o instanceof MockBlock)) return false;
+    MockBlock other = (MockBlock) o;
+
+    return this.x == other.x && this.y == other.y && this.z == other.z && this.getWorld().equals(other.getWorld());
   }
 }

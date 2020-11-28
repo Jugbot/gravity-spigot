@@ -3,12 +3,14 @@ package io.github.jugbot.graph;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableNetwork;
 
@@ -63,9 +65,9 @@ public class MaxFlow {
       Vertex t,
       Map<EndpointPair<Vertex>, Float> toChange) {
     // makes sure flow is already at maximum
-    MaxFlow.maxFlow(graph, dists, s, t); 
-    Vertex temp_s = new Vertex(1);
-    Vertex temp_t = new Vertex(2);
+    MaxFlow.maxFlow(graph, dists, s, t);
+    Vertex temp_s = new Vertex(ReservedID.TEMP_SOURCE);
+    Vertex temp_t = new Vertex(ReservedID.TEMP_DEST);
     assert !graph.nodes().contains(temp_s) && !graph.nodes().contains(temp_t) : "Temp nodes should not exist yet!";
     dists.put(temp_s, -1);
     dists.put(temp_t, -1);
@@ -140,10 +142,10 @@ public class MaxFlow {
     if (!ptr.containsKey(src)) {
       ptr.put(src, new HashSet<>(graph.outEdges(src)));
     }
-    Set<Edge> unvisitedSet;
-    while (!(unvisitedSet = ptr.get(src)).isEmpty()) {
-      Edge e = unvisitedSet.iterator().next();
-      unvisitedSet.remove(e);
+    Iterator<Edge> unvisitedSet = ptr.get(src).iterator();
+    while (unvisitedSet.hasNext()) {
+      Edge e = unvisitedSet.next();
+      unvisitedSet.remove();
       EndpointPair<Vertex> uv = graph.incidentNodes(e);
       if (dists.getOrDefault(uv.nodeV(), -1) == dists.getOrDefault(uv.nodeU(), -1) + 1 && e.f < e.cap) {
         float df = dinicDfs(graph, dists, ptr, dest, uv.nodeV(), Math.min(f, e.cap - e.f));
@@ -167,6 +169,7 @@ public class MaxFlow {
     return 0;
   }
 
+  @VisibleForTesting
   public static int maxFlow(MutableNetwork<Vertex, Edge> graph, Map<Vertex, Integer> dists, Vertex src, Vertex dest) {
     assert src != dest : "Source vertex cannot be the same as the destination!";
     // shortcut
@@ -175,12 +178,12 @@ public class MaxFlow {
     int flow = 0;
     while (dinicBfs(graph, dists, src, dest)) {
       // keeps track of visited edges per vertex
-      Map<Vertex, Set<Edge>> ptr = new HashMap<>(graph.nodes().size()); 
+      Map<Vertex, Set<Edge>> ptr = new HashMap<>(graph.nodes().size());
       while (true) {
         float df = dinicDfs(graph, dists, ptr, dest, src, Float.POSITIVE_INFINITY);
         if (df == 0) break;
         flow += df;
-        System.out.println(flow / (double) 65536);
+        // System.out.println(flow / (double) 65536); // tracks progress (performance debugging)
       }
     }
     return flow;
@@ -189,6 +192,7 @@ public class MaxFlow {
   public static List<Vertex> getOffendingVertices(
       MutableNetwork<Vertex, Edge> graph, Map<Vertex, Integer> dists, Vertex src, Vertex dest) {
     // TODO: also flag chunk edge violations
+    // if (dists.getOrDefault(dest, -1) == -1)
     dinicBfs(graph, dists, src, dest);
     List<Vertex> result = new ArrayList<>();
     for (Edge e : graph.outEdges(src)) {

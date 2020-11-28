@@ -8,24 +8,11 @@ import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 
 public class MockChunkSnapshot implements ChunkSnapshot {
-  Block[][][] blocks = new MockBlock[16][256][16];
+  // feel free to modify
+  public BlockData[][][] blocks = new MockBlockData[16][256][16];
 
-  public MockChunkSnapshot() {
-    for (int y = 0; y < 256; y++) {
-      for (int x = 0; x < 16; x++) {
-        for (int z = 0; z < 16; z++) {
-          if (y < MockWorld.HEIGHT) {
-            blocks[x][y][z] = new MockBlock(new MockBlockData(Material.DIRT), x, y, z);
-          } else {
-            blocks[x][y][z] = new MockBlock(new MockBlockData(Material.AIR), x, y, z);
-          }
-        }
-      }
-    }
-  }
-
-  public Block getBlock(int x, int y, int z) {
-    return blocks[x][y][z];
+  public MockChunkSnapshot(BlockData[][][] blocks) {
+    this.blocks = blocks;
   }
 
   @Override
@@ -48,7 +35,7 @@ public class MockChunkSnapshot implements ChunkSnapshot {
 
   @Override
   public BlockData getBlockData(int x, int y, int z) {
-    return blocks[x][y][z].getBlockData();
+    return blocks[x][y][z];
     // return null;
   }
 
@@ -66,7 +53,7 @@ public class MockChunkSnapshot implements ChunkSnapshot {
 
   @Override
   public Material getBlockType(int x, int y, int z) {
-    return blocks[x][y][z].getBlockData().getMaterial();
+    return blocks[x][y][z].getMaterial();
   }
 
   @Override

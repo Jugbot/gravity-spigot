@@ -32,10 +32,7 @@ public class Vertex {
    * @return Vertex with block hashCode
    */
   public Vertex(@Nonnull Block block) {
-    this.x = block.getX();
-    this.yOrSpecial = block.getY();
-    this.z = block.getZ();
-    this.uid = Integer.rotateLeft(this.yOrSpecial, 24) ^ Integer.rotateLeft(this.x, 12) ^ this.z;
+    this(block.getX(), block.getY(), block.getZ());
   }
 
   /**
@@ -45,12 +42,9 @@ public class Vertex {
    * @param special reserved indexes for computationally involved vertices
    * @return Vertex with chunk and index amalgam hashCode
    */
-  public Vertex(@Nonnull Chunk chunk, int special) {
-    if (special <= 0) throw new IllegalArgumentException();
-    this.yOrSpecial = -special;
-    this.x = chunk.getX();
-    this.z = chunk.getZ();
-    this.uid = Integer.rotateLeft(this.yOrSpecial, 24) ^ Integer.rotateLeft(this.x, 12) ^ this.z;
+  public Vertex(@Nonnull Chunk chunk, ReservedID reserved) {
+    this(chunk.getX(), -reserved.value(), chunk.getZ());
+    if (reserved.value() <= 0) throw new IllegalArgumentException();
   }
 
   /**
@@ -59,12 +53,23 @@ public class Vertex {
    * @param special reserved indexes for computationally involved vertices
    * @return Vertex with hashcode defined by a special number
    */
-  public Vertex(int special) {
-    if (special <= 0) throw new IllegalArgumentException();
-    this.yOrSpecial = -special;
-    this.x = 0;
-    this.z = 0;
-    this.uid = Integer.rotateLeft(this.yOrSpecial, 24) ^ Integer.rotateLeft(this.x, 12) ^ this.z;
+  public Vertex(ReservedID reserved) {
+    this(0, -reserved.value(), 0);
+    if (reserved.value() <= 0) throw new IllegalArgumentException();
+  }
+
+  /**
+   * Exposed for testing purposes.
+   *
+   * @param x Block location or Chunk location
+   * @param y Block location or Special value
+   * @param z Block location or Chunk location
+   */
+  protected Vertex(int x, int y, int z) {
+    this.yOrSpecial = y;
+    this.x = x;
+    this.z = z;
+    this.uid = Integer.rotateLeft(y, 24) ^ Integer.rotateLeft(x, 12) ^ z;
   }
 
   @Override
@@ -82,5 +87,10 @@ public class Vertex {
     // return (this.yOrSpecial + this.x + this.z) * 31 + this.yOrSpecial;
     // return Integer.rotateLeft(this.yOrSpecial, 24) ^ Integer.rotateLeft(this.x, 12) ^ this.z;
     return uid;
+  }
+
+  @Override
+  public String toString() {
+    return String.format("Vertex(%d, %d, %d, uid:%x)", x, yOrSpecial, z, uid);
   }
 }

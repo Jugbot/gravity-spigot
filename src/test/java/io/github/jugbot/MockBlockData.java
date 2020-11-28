@@ -5,7 +5,7 @@ import org.bukkit.Material;
 import org.bukkit.block.data.BlockData;
 
 public class MockBlockData implements BlockData {
-  final Material material;
+  public Material material;
 
   public MockBlockData(Material material) {
     this.material = material;

@@ -15,13 +15,25 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.plugin.Plugin;
 
 public class MockChunk implements Chunk {
-  final MockChunkSnapshot snapshot;
   final int x, z;
 
-  public MockChunk(int x, int z) {
-    this.x = x;
-    this.z = z;
-    snapshot = new MockChunkSnapshot();
+  // feel free to modify
+  public Block[][][] blocks = new MockBlock[16][256][16];
+
+  public MockChunk(int cx, int cz) {
+    this.x = cx;
+    this.z = cz;
+    for (int y = 0; y < 256; y++) {
+      for (int x = 0; x < 16; x++) {
+        for (int z = 0; z < 16; z++) {
+          if (y < MockWorld.HEIGHT) {
+            blocks[x][y][z] = new MockBlock(new MockBlockData(Material.DIRT), x, y, z);
+          } else {
+            blocks[x][y][z] = new MockBlock(new MockBlockData(Material.AIR), x, y, z);
+          }
+        }
+      }
+    }
   }
 
   @Override
@@ -41,12 +53,20 @@ public class MockChunk implements Chunk {
 
   @Override
   public Block getBlock(int x, int y, int z) {
-    return snapshot.getBlock(x, y, z);
+    return blocks[x][y][z];
   }
 
   @Override
   public ChunkSnapshot getChunkSnapshot() {
-    return snapshot;
+    BlockData[][][] copy = new MockBlockData[16][256][16];
+    for (int y = 0; y < 256; y++) {
+      for (int x = 0; x < 16; x++) {
+        for (int z = 0; z < 16; z++) {
+          copy[x][y][z] = new MockBlockData(blocks[x][y][z].getBlockData().getMaterial());
+        }
+      }
+    }
+    return new MockChunkSnapshot(copy);
   }
 
   @Override

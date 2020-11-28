@@ -21,8 +21,14 @@ import io.github.jugbot.graph.Vertex;
 
 public class MaxFlowTest {
 
+  class MockVertex extends Vertex {
+    MockVertex(int special) {
+      super(0, special, 0);
+    }
+  }
+
   private Vertex v(int id) {
-    return new Vertex(id + 5);
+    return new MockVertex(id);
   }
 
   @Test
