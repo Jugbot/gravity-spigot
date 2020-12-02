@@ -51,6 +51,8 @@ public class SubGraph implements MutableNetwork<Vertex, Edge> {
   private Vertex south_dest;
   private Vertex west_dest;
 
+  private GraphState state = new GraphState();;
+
   public Map<Vertex, Integer> dists = new HashMap<>();
 
   public SubGraph(Chunk liveChunk) {
@@ -168,7 +170,7 @@ public class SubGraph implements MutableNetwork<Vertex, Edge> {
   }
 
   /** Update chunk with added / removed blocks Significant speed improvement compared to re-creation */
-  public void update(ChunkSnapshot newSnapshot) {
+  public GraphState update(ChunkSnapshot newSnapshot) {
     Map<EndpointPair<Vertex>, Float> toChange = new HashMap<>();
 
     for (int y = 0; y < 256; y++) {
@@ -220,12 +222,13 @@ public class SubGraph implements MutableNetwork<Vertex, Edge> {
     MaxFlow.changeEdges(network, dists, src, dest, toChange);
     // Run for edges whoes capacities were set to zero
     // Will only remove if augment capacity is also zero.
-    // MaxFlow.pruneEdges(graph, dist, src, dest, toChange);
+    this.state = MaxFlow.getGraphState(network, dists, src, dest);
+    return this.state;
   }
 
   /** Called Asynchronously */
   public Block[] getIntegrityViolations() {
-    List<Vertex> offending = MaxFlow.getOffendingVertices(network, dists, src, dest);
+    List<Vertex> offending = this.state.offendingNodes;
     // Translate vertices to Blocks w/ Locations
     return offending.stream()
         .map(v -> v.getBlockXYZ())
@@ -244,6 +247,11 @@ public class SubGraph implements MutableNetwork<Vertex, Edge> {
     EnumMap<IntegrityData, Float> data = Config.Instance().getBlockData().getData(material);
     if (data == null) return Config.Instance().getBlockData().getDefault();
     return data;
+  }
+
+  public GraphState getState() {
+    if (this.state == null) this.state = new GraphState();
+    return this.state;
   }
 
   static boolean isStructural(Material material) {

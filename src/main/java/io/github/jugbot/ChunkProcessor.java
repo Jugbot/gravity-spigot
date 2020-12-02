@@ -11,6 +11,7 @@ import org.bukkit.Chunk;
 import org.bukkit.block.Block;
 
 import io.github.jugbot.graph.SubGraph;
+import io.github.jugbot.graph.SuperGraph;
 import io.github.jugbot.util.AsyncBukkit;
 
 /**
@@ -22,9 +23,12 @@ public class ChunkProcessor {
   // Operation queue and status
   private LinkedHashSet<Chunk> chunkUpdateQueue = new LinkedHashSet<>();
   private Set<Chunk> inProgress = new HashSet<>();
+  private LinkedHashSet<Chunk> crossChunkUpdateQueue = new LinkedHashSet<>();
   // Loaded chunks
   // TODO: use SoftReference cache for flexible memory use
   private Map<Chunk, SubGraph> loadedChunks = new HashMap<>();
+
+  private SuperGraph problemsolver = new SuperGraph();
 
   public static ChunkProcessor Instance() {
     if (instance == null) instance = new ChunkProcessor();
@@ -123,15 +127,20 @@ public class ChunkProcessor {
             integrityChunk.update(chunk.getChunkSnapshot());
             // integrityChunk = new SubGraph(chunk);
             // Thread & Callback
-            return integrityChunk.getIntegrityViolations();
+            return integrityChunk;
           },
-          (Block[] blocks) -> {
+          (SubGraph integrityChunk) -> {
+            if (integrityChunk.getState().dependantChunks.isEmpty()) {
+              // Call gravity event on blocks in chunk
+              Block[] blocks = integrityChunk.getIntegrityViolations();
+              Bukkit.getPluginManager().callEvent(new BlockGravityEvent(blocks));
+              App.Instance().getLogger().fine("Blocks to fall: " + blocks.length);
+            } else {
+              App.Instance().getLogger().fine("Adding chunk to cross-queue");
+            }
             // Mark chunk as free
             inProgress.remove(chunk);
-            // Call gravity event on blocks in chunk
-            Bukkit.getPluginManager().callEvent(new BlockGravityEvent(blocks));
             App.Instance().getLogger().fine("Thread Finished");
-            App.Instance().getLogger().fine("Blocks to fall: " + blocks.length);
           });
     }
   }

@@ -1,73 +1,79 @@
 package io.github.jugbot;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
-
-import java.util.logging.Logger;
-
-import com.google.common.graph.Graphs;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 
-import io.github.jugbot.graph.MaxFlow;
-import io.github.jugbot.graph.ReservedID;
+import io.github.jugbot.graph.GraphState;
 import io.github.jugbot.graph.SubGraph;
-import io.github.jugbot.graph.Vertex;
-import org.junit.runners.MethodSorters;
+import io.github.jugbot.util.IntegerXZ;
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(Config.class)
 public class SubGraphTest {
-  private static SubGraph subject;
-  private static MockWorld mockedWorld;
 
-  @Test
-  public void step1_setup() throws Exception {
-    // PowerMockito.mockStatic(App.class);
-    // mock(JavaPlugin.class);
-    // App app = mock(App.class);
-    // PowerMockito.whenNew(App.class).withNoArguments().thenReturn(app);
-    // when(App.getPlugin(App.class)).thenReturn(app);
-    // when(app.getLogger()).thenReturn(mock(Logger.class));
+  private SubGraph subject;
+  private MockWorld mockedWorld;
+  private static MockedStatic<Config> mocked = mockStatic(Config.class);
 
+  @BeforeEach
+  public void setup() throws Exception {
     Config config = mock(Config.class);
-    PowerMockito.whenNew(Config.class).withNoArguments().thenReturn(config);
-    when(Config.Instance()).thenReturn(config);
+    mocked.when(Config::Instance).thenReturn(config);
     when(config.getBlockData()).thenReturn(new BlockData());
-    MockWorld.HEIGHT = 64;
+    MockWorld.HEIGHT = 32;
     mockedWorld = MockWorld.Instance();
     subject = new SubGraph(mockedWorld.getChunkAt(0, 0));
     System.out.println("done");
   }
 
-  @Test
-  public void step2_maxFlow() {
-    Vertex src = new Vertex(mockedWorld.getChunkAt(0, 0), ReservedID.SOURCE);
-    Vertex dest = new Vertex(mockedWorld.getChunkAt(0, 0), ReservedID.DEST);
-    assertEquals(0, MaxFlow.maxFlow(subject, subject.dists, src, dest));
-  }
+  @Nested
+  class ChunkAtOrigin {
+    @Test
+    public void cornerNW() throws Exception {
+      Block offending = mockedWorld.getBlockAt(0, 128, 0);
+      ((MockBlockData) offending.getBlockData()).material = Material.DIRT;
+      GraphState state = subject.update(mockedWorld.getChunkAt(0, 0).getChunkSnapshot());
 
-  @Test
-  public void step3_mockedChunk() throws Exception {
-    // MockChunkSnapshot mockChunk = new MockChunkSnapshot();
-    // MockBlock offendingBlock = (MockBlock) mockChunk.blocks[0][128][0];//new MockBlock(new
-    // MockBlockData(Material.DIRT), 0, 128, 0);
-    // ((MockBlockData)offendingBlock.blockData).material = Material.DIRT;
-    Block offending = mockedWorld.getBlockAt(0, 255, 0);
-    ((MockBlockData) offending.getBlockData()).material = Material.DIRT;
-    subject.update(mockedWorld.getChunkAt(0, 0).getChunkSnapshot());
-    assertEquals(1, subject.getIntegrityViolations().length);
-    assertEquals(offending, subject.getIntegrityViolations()[0]);
-    // Graphs.reachableNodes(subject, new Vertex())
+      assertEquals(1, state.offendingNodes.size());
+      assertEquals(2, state.dependantChunks.size());
+      assertTrue(
+          state.dependantChunks.contains(new IntegerXZ(0, -1)) && state.dependantChunks.contains(new IntegerXZ(-1, 0)));
+
+      ((MockBlockData) offending.getBlockData()).material = Material.AIR;
+      state = subject.update(mockedWorld.getChunkAt(0, 0).getChunkSnapshot());
+      assertEquals(0, state.offendingNodes.size());
+      assertEquals(0, state.dependantChunks.size());
+    }
+
+    @Test
+    public void cornerSE() throws Exception {
+      Block offending = mockedWorld.getBlockAt(15, 128, 15);
+      ((MockBlockData) offending.getBlockData()).material = Material.DIRT;
+      GraphState state = subject.update(mockedWorld.getChunkAt(0, 0).getChunkSnapshot());
+
+      assertEquals(1, state.offendingNodes.size());
+      assertEquals(2, state.dependantChunks.size());
+      assertTrue(
+          state.dependantChunks.contains(new IntegerXZ(0, 1)) && state.dependantChunks.contains(new IntegerXZ(1, 0)));
+
+      ((MockBlockData) offending.getBlockData()).material = Material.AIR;
+      state = subject.update(mockedWorld.getChunkAt(0, 0).getChunkSnapshot());
+      assertEquals(0, state.offendingNodes.size());
+      assertEquals(0, state.dependantChunks.size());
+
+      offending = mockedWorld.getBlockAt(8, 128, 8);
+      ((MockBlockData) offending.getBlockData()).material = Material.DIRT;
+      state = subject.update(mockedWorld.getChunkAt(0, 0).getChunkSnapshot());
+      assertEquals(1, state.offendingNodes.size());
+      assertEquals(0, state.dependantChunks.size());
+    }
   }
 }

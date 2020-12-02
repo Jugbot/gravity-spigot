@@ -15,6 +15,10 @@ public class Vertex {
   // precomputed hash
   private final int uid;
 
+  public boolean isBlock() {
+    return yOrSpecial >= 0;
+  }
+
   public Optional<int[]> getBlockXYZ() {
     if (yOrSpecial < 0) return Optional.empty();
     return Optional.of(new int[] {x, yOrSpecial, z});

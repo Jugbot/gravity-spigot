@@ -8,6 +8,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -17,6 +18,10 @@ import org.bukkit.entity.Player;
 import io.github.jugbot.App;
 import io.github.jugbot.BlockChangeEvent;
 import io.github.jugbot.ChunkProcessor;
+import io.github.jugbot.graph.Edge;
+import io.github.jugbot.graph.ReservedID;
+import io.github.jugbot.graph.SubGraph;
+import io.github.jugbot.graph.Vertex;
 
 public class GravityCommand implements CommandExecutor {
 
@@ -38,16 +43,54 @@ public class GravityCommand implements CommandExecutor {
           }
         case "edges":
           {
-            // Block block =
-            //     (args.size() > 0 && args.get(0).equals("here"))
-            //         ? player.getLocation().getBlock()
-            //         : player.getTargetBlockExact(16);
-            // IntegrityChunk iChunk = ChunkProcessor.Instance().getChunk(block.getChunk());
-            // player.sendMessage(
-            //     "node: "
-            //         + new SubGraph.XYZ(
-            //                 block.getX() - iChunk.getBlockX(), block.getY(), block.getZ() - iChunk.getBlockZ())
-            //             .index);
+            Block block =
+                (args.size() > 0 && args.get(0).equals("here"))
+                    ? player.getLocation().getBlock()
+                    : player.getTargetBlockExact(16);
+            SubGraph graph = ChunkProcessor.Instance().getChunk(block.getChunk());
+            Vertex inspected = new Vertex(block);
+            player.sendMessage(inspected.toString());
+            Edge[] outEdges = new Edge[8];
+            Vertex[] neighbors =
+                new Vertex[] {
+                  new Vertex(block.getChunk(), ReservedID.SOURCE),
+                  new Vertex(block.getChunk(), ReservedID.DEST),
+                  new Vertex(block.getRelative(BlockFace.UP)),
+                  new Vertex(block.getRelative(BlockFace.DOWN)),
+                  new Vertex(block.getRelative(BlockFace.EAST)),
+                  new Vertex(block.getRelative(BlockFace.WEST)),
+                  new Vertex(block.getRelative(BlockFace.NORTH)),
+                  new Vertex(block.getRelative(BlockFace.SOUTH))
+                };
+
+            int j = -1;
+            if (graph.nodes().contains(neighbors[++j]))
+              outEdges[j] = graph.edgeConnectingOrNull(neighbors[j], inspected);
+            if (graph.nodes().contains(neighbors[++j]))
+              outEdges[j] = graph.edgeConnectingOrNull(inspected, neighbors[j]);
+            if (graph.nodes().contains(neighbors[++j]))
+              outEdges[j] = graph.edgeConnectingOrNull(inspected, neighbors[j]);
+            if (graph.nodes().contains(neighbors[++j]))
+              outEdges[j] = graph.edgeConnectingOrNull(inspected, neighbors[j]);
+            if (graph.nodes().contains(neighbors[++j]))
+              outEdges[j] = graph.edgeConnectingOrNull(inspected, neighbors[j]);
+            if (graph.nodes().contains(neighbors[++j]))
+              outEdges[j] = graph.edgeConnectingOrNull(inspected, neighbors[j]);
+            if (graph.nodes().contains(neighbors[++j]))
+              outEdges[j] = graph.edgeConnectingOrNull(inspected, neighbors[j]);
+            if (graph.nodes().contains(neighbors[++j]))
+              outEdges[j] = graph.edgeConnectingOrNull(inspected, neighbors[j]);
+
+            int i = -1;
+            if (outEdges[++i] != null) player.sendMessage("MASS : " + outEdges[i].toString());
+            if (outEdges[++i] != null) player.sendMessage("SINK : " + outEdges[i].toString());
+            if (outEdges[++i] != null) player.sendMessage("UP   : " + outEdges[i].toString());
+            if (outEdges[++i] != null) player.sendMessage("DOWN : " + outEdges[i].toString());
+            if (outEdges[++i] != null) player.sendMessage("EAST : " + outEdges[i].toString());
+            if (outEdges[++i] != null) player.sendMessage("WEST : " + outEdges[i].toString());
+            if (outEdges[++i] != null) player.sendMessage("NORTH: " + outEdges[i].toString());
+            if (outEdges[++i] != null) player.sendMessage("SOUTH: " + outEdges[i].toString());
+            return true;
             // List<Edge> edges = iChunk.debugGetEdgesAt(block);
             // for (IntegrityData type : IntegrityData.values()) {
             //   Edge edge = edges.get(type.ordinal());

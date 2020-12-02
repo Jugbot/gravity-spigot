@@ -227,8 +227,8 @@ public class MaxFlowTest {
     verifyGraph(graphB, s, t);
     assertTrue(MaxFlow.maxFlow(graphA, distsA, s, t) == 0 && MaxFlow.maxFlow(graphB, distsB, s, t) == 0);
     assertTrue(resultA == resultB, resultA + " (mod) != " + resultB + " (new)");
-    int badA = MaxFlow.getOffendingVertices(graphA, distsA, s, t).size();
-    int badB = MaxFlow.getOffendingVertices(graphB, distsB, s, t).size();
+    int badA = MaxFlow.getGraphState(graphA, distsA, s, t).offendingNodes.size();
+    int badB = MaxFlow.getGraphState(graphB, distsB, s, t).offendingNodes.size();
     assertTrue(badA == badB, badA + " (mod) != " + badB + " (new)");
   }
 

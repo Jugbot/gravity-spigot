@@ -1,6 +1,7 @@
 package io.github.jugbot.graph;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -12,6 +13,8 @@ import java.util.Set;
 
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableNetwork;
+
+import io.github.jugbot.util.IntegerXZ;
 
 public class MaxFlow {
 
@@ -195,15 +198,39 @@ public class MaxFlow {
    * @param dest Destination Vertex
    * @return Vertex set that has capacity left over from src
    */
-  public static List<Vertex> getOffendingVertices(
+  private static List<Vertex> getOffendingVertices(
       MutableNetwork<Vertex, Edge> graph, Map<Vertex, Integer> dists, Vertex src, Vertex dest) {
-    // TODO: also flag chunk edge violations
     List<Vertex> result = new ArrayList<>();
     // Call to graph.nodes() preserves order
     for (Vertex v : graph.nodes()) {
       Optional<Edge> e = graph.edgeConnecting(src, v);
       if (dists.getOrDefault(v, -1) > 0 && e.isPresent() && e.get().cap > 0) {
         result.add(v);
+      }
+    }
+    return result;
+  }
+
+  // TODO: separate groups of blocks that go off chunk
+  public static GraphState getGraphState(
+      MutableNetwork<Vertex, Edge> graph, Map<Vertex, Integer> dists, Vertex src, Vertex dest) {
+    GraphState result = new GraphState();
+    // Call to graph.nodes() preserves order
+    for (Vertex v : graph.nodes()) {
+      Optional<Edge> e = graph.edgeConnecting(src, v);
+      if (dists.getOrDefault(v, -1) > 0 && e.isPresent() && e.get().cap > 0) {
+        Optional<int[]> xyzOpt = v.getBlockXYZ();
+        if (xyzOpt.isPresent()) {
+          result.offendingNodes.add(v);
+          // Mark if the current group of offending blocks relies on another chunk
+          int[] xyz = xyzOpt.get();
+          int x = xyz[0];
+          int z = xyz[2];
+          if (x % 16 == 0) result.dependantChunks.add(new IntegerXZ(Math.floorDiv(x - 1, 16), Math.floorDiv(z, 16)));
+          if (x % 16 == 15) result.dependantChunks.add(new IntegerXZ(Math.floorDiv(x + 1, 16), Math.floorDiv(z, 16)));
+          if (z % 16 == 0) result.dependantChunks.add(new IntegerXZ(Math.floorDiv(x, 16), Math.floorDiv(z - 1, 16)));
+          if (z % 16 == 15) result.dependantChunks.add(new IntegerXZ(Math.floorDiv(x, 16), Math.floorDiv(z + 1, 16)));
+        }
       }
     }
     return result;

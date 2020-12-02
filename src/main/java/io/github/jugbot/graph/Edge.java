@@ -7,4 +7,9 @@ public class Edge {
   public Edge(float cap) {
     this.cap = cap;
   }
+
+  @Override
+  public String toString() {
+    return String.format("Edge(%f / %f)", f, cap);
+  }
 }
