@@ -31,13 +31,13 @@ public class BlockData implements ConfigurationSerializable {
       }
 
       EnumMap<IntegrityData, Float> data = new EnumMap(IntegrityData.class);
-      data.put(IntegrityData.MASS, Float.intBitsToFloat((Integer) weights.get("mass")));
-      data.put(IntegrityData.UP, Float.intBitsToFloat((Integer) weights.get("u")));
-      data.put(IntegrityData.DOWN, Float.intBitsToFloat((Integer) weights.get("d")));
-      data.put(IntegrityData.NORTH, Float.intBitsToFloat((Integer) weights.get("n")));
-      data.put(IntegrityData.EAST, Float.intBitsToFloat((Integer) weights.get("e")));
-      data.put(IntegrityData.SOUTH, Float.intBitsToFloat((Integer) weights.get("s")));
-      data.put(IntegrityData.WEST, Float.intBitsToFloat((Integer) weights.get("w")));
+      data.put(IntegrityData.MASS, ((Integer) weights.get("mass")).floatValue());
+      data.put(IntegrityData.UP, ((Integer) weights.get("u")).floatValue());
+      data.put(IntegrityData.DOWN, ((Integer) weights.get("d")).floatValue());
+      data.put(IntegrityData.NORTH, ((Integer) weights.get("n")).floatValue());
+      data.put(IntegrityData.EAST, ((Integer) weights.get("e")).floatValue());
+      data.put(IntegrityData.SOUTH, ((Integer) weights.get("s")).floatValue());
+      data.put(IntegrityData.WEST, ((Integer) weights.get("w")).floatValue());
 
       blocks.put(material, data);
     }
