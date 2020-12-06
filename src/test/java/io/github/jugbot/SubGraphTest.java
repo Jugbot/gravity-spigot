@@ -2,9 +2,7 @@ package io.github.jugbot;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.when;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -25,13 +23,14 @@ public class SubGraphTest {
 
   @BeforeEach
   public void setup() throws Exception {
-    Config config = mock(Config.class);
-    mocked.when(Config::Instance).thenReturn(config);
-    when(config.getBlockData()).thenReturn(new BlockData());
+    IntegrityData idc = new IntegrityData();
+    mocked.when(() -> Config.getStructuralData(Material.AIR)).thenReturn(idc.getEmpty());
+    mocked.when(() -> Config.getStructuralData(Material.DIRT)).thenReturn(idc.getDefault());
+    mocked.when(() -> Config.isStructural(Material.AIR)).thenReturn(false);
+    mocked.when(() -> Config.isStructural(Material.DIRT)).thenReturn(true);
     MockWorld.HEIGHT = 32;
     mockedWorld = MockWorld.Instance();
     subject = new SubGraph(mockedWorld.getChunkAt(0, 0));
-    System.out.println("done");
   }
 
   @Nested

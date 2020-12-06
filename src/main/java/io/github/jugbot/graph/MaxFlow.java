@@ -14,6 +14,7 @@ import java.util.Set;
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableNetwork;
 
+import io.github.jugbot.util.IntegerXYZ;
 import io.github.jugbot.util.IntegerXZ;
 
 public class MaxFlow {
@@ -219,13 +220,13 @@ public class MaxFlow {
     for (Vertex v : graph.nodes()) {
       Optional<Edge> e = graph.edgeConnecting(src, v);
       if (dists.getOrDefault(v, -1) > 0 && e.isPresent() && e.get().cap > 0) {
-        Optional<int[]> xyzOpt = v.getBlockXYZ();
+        Optional<IntegerXYZ> xyzOpt = v.getBlockXYZ();
         if (xyzOpt.isPresent()) {
           result.offendingNodes.add(v);
           // Mark if the current group of offending blocks relies on another chunk
-          int[] xyz = xyzOpt.get();
-          int x = xyz[0];
-          int z = xyz[2];
+          IntegerXYZ xyz = xyzOpt.get();
+          int x = xyz.x;
+          int z = xyz.z;
           if (x % 16 == 0) result.dependantChunks.add(new IntegerXZ(Math.floorDiv(x - 1, 16), Math.floorDiv(z, 16)));
           if (x % 16 == 15) result.dependantChunks.add(new IntegerXZ(Math.floorDiv(x + 1, 16), Math.floorDiv(z, 16)));
           if (z % 16 == 0) result.dependantChunks.add(new IntegerXZ(Math.floorDiv(x, 16), Math.floorDiv(z - 1, 16)));

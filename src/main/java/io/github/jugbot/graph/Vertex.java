@@ -7,6 +7,9 @@ import javax.annotation.Nonnull;
 import org.bukkit.Chunk;
 import org.bukkit.block.Block;
 
+import io.github.jugbot.util.IntegerXYZ;
+import io.github.jugbot.util.IntegerXZ;
+
 public class Vertex {
   private final int x;
   // special indices occupy the negative range
@@ -19,14 +22,16 @@ public class Vertex {
     return yOrSpecial >= 0;
   }
 
-  public Optional<int[]> getBlockXYZ() {
-    if (yOrSpecial < 0) return Optional.empty();
-    return Optional.of(new int[] {x, yOrSpecial, z});
+  public Optional<IntegerXYZ> getBlockXYZ() {
+    if (!isBlock()) return Optional.empty();
+    return Optional.of(new IntegerXYZ(x, yOrSpecial, z));
   }
 
-  public Optional<int[]> getChunkXZ() {
-    if (yOrSpecial >= 0) return Optional.empty();
-    return Optional.of(new int[] {x, z});
+  public Optional<IntegerXZ> getChunkXZ() {
+    if (-yOrSpecial == ReservedID.TEMP_DEST.value() || -yOrSpecial == ReservedID.TEMP_SOURCE.value())
+      return Optional.empty();
+    if (isBlock()) return Optional.of(new IntegerXZ(Math.floorDiv(x, 16), Math.floorDiv(z, 16)));
+    return Optional.of(new IntegerXZ(x, z));
   }
 
   /**

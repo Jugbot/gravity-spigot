@@ -125,7 +125,6 @@ public class ChunkProcessor {
             SubGraph integrityChunk = getChunk(chunk);
             // Update integrity
             integrityChunk.update(chunk.getChunkSnapshot());
-            // integrityChunk = new SubGraph(chunk);
             // Thread & Callback
             return integrityChunk;
           },

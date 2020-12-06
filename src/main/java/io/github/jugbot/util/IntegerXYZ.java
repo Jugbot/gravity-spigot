@@ -5,7 +5,7 @@ import java.util.Objects;
 public class IntegerXYZ {
   public int x, y, z;
 
-  IntegerXYZ(int x, int y, int z) {
+  public IntegerXYZ(int x, int y, int z) {
     this.x = x;
     this.y = y;
     this.z = z;

@@ -15,7 +15,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 public class Config {
   private static Config instance = null;
-  private BlockData blockData;
+  private IntegrityData blockData;
 
   public static Config Instance() {
     if (instance == null) instance = new Config();
@@ -23,6 +23,10 @@ public class Config {
   }
 
   private Config() {
+    loadBlockData();
+  }
+
+  private void loadBlockData() {
     File blockDataConfigFile;
     if ((blockDataConfigFile = new File(App.Instance().getDataFolder(), "blockdata.csv")).exists()) {
       loadBlockDataCSV(blockDataConfigFile);
@@ -36,26 +40,22 @@ public class Config {
     }
     if (blockData == null || blockData.blocks.size() == 0) {
       App.Instance().getLogger().info("No block data found in blockdata config!");
-      blockData = new BlockData();
+      blockData = new IntegrityData();
     }
-  }
-
-  public BlockData getBlockData() {
-    return blockData;
   }
 
   private void loadBlockDataYAML(File blockDataConfigFile) {
     FileConfiguration blockDataConfig;
     try {
       blockDataConfig = YamlConfiguration.loadConfiguration(blockDataConfigFile);
-      blockData = new BlockData(blockDataConfig.getConfigurationSection("root.blocks").getValues(false));
+      blockData = new IntegrityData(blockDataConfig.getConfigurationSection("root.blocks").getValues(false));
     } catch (IllegalArgumentException e) {
       e.printStackTrace();
     }
   }
 
   private void loadBlockDataCSV(File blockDataConfigFile) {
-    blockData = new BlockData();
+    blockData = new IntegrityData();
     try (CSVParser parser = CSVParser.parse(blockDataConfigFile, Charsets.UTF_8, CSVFormat.DEFAULT)) {
       for (CSVRecord record : parser.getRecords()) {
         App.Instance().getLogger().fine(record.toString());
@@ -73,16 +73,16 @@ public class Config {
           }
           continue;
         }
-        EnumMap<IntegrityData, Float> data;
+        EnumMap<Integrity, Float> data;
         try {
-          data = new EnumMap(IntegrityData.class);
-          data.put(IntegrityData.MASS, Float.parseFloat(record.get(1)));
-          data.put(IntegrityData.UP, Float.parseFloat(record.get(2)));
-          data.put(IntegrityData.DOWN, Float.parseFloat(record.get(3)));
-          data.put(IntegrityData.NORTH, Float.parseFloat(record.get(4)));
-          data.put(IntegrityData.EAST, Float.parseFloat(record.get(5)));
-          data.put(IntegrityData.SOUTH, Float.parseFloat(record.get(6)));
-          data.put(IntegrityData.WEST, Float.parseFloat(record.get(7)));
+          data = new EnumMap<>(Integrity.class);
+          data.put(Integrity.MASS, Float.parseFloat(record.get(1)));
+          data.put(Integrity.UP, Float.parseFloat(record.get(2)));
+          data.put(Integrity.DOWN, Float.parseFloat(record.get(3)));
+          data.put(Integrity.NORTH, Float.parseFloat(record.get(4)));
+          data.put(Integrity.EAST, Float.parseFloat(record.get(5)));
+          data.put(Integrity.SOUTH, Float.parseFloat(record.get(6)));
+          data.put(Integrity.WEST, Float.parseFloat(record.get(7)));
         } catch (NumberFormatException e) {
           App.Instance()
               .getLogger()
@@ -99,5 +99,16 @@ public class Config {
     } catch (IOException e) {
       e.printStackTrace();
     }
+  }
+
+  public static EnumMap<Integrity, Float> getStructuralData(Material material) {
+    if (!isStructural(material)) return Instance().blockData.getEmpty();
+    EnumMap<Integrity, Float> data = Instance().blockData.getData(material);
+    if (data == null) return Instance().blockData.getDefault();
+    return data;
+  }
+
+  public static boolean isStructural(Material material) {
+    return material.isSolid();
   }
 }

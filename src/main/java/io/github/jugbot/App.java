@@ -48,7 +48,7 @@ public class App extends JavaPlugin {
       e.printStackTrace();
     }
     /** INIT */
-    ConfigurationSerialization.registerClass(BlockData.class);
+    ConfigurationSerialization.registerClass(IntegrityData.class);
     Config.Instance();
     ChunkProcessor.Instance();
     SubGraphIO.Instance();

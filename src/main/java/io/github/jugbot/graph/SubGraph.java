@@ -24,7 +24,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import io.github.jugbot.App;
 import io.github.jugbot.Config;
-import io.github.jugbot.IntegrityData;
+import io.github.jugbot.Integrity;
+import io.github.jugbot.util.IntegerXYZ;
 
 public class SubGraph implements MutableNetwork<Vertex, Edge> {
   private final Chunk chunk;
@@ -39,8 +40,8 @@ public class SubGraph implements MutableNetwork<Vertex, Edge> {
           .build();
 
   // consts
-  private Vertex src;
-  private Vertex dest;
+  public Vertex src;
+  public Vertex dest;
   // Utility nodes for cached connections to other chunks
   private Vertex north_src;
   private Vertex east_src;
@@ -51,7 +52,7 @@ public class SubGraph implements MutableNetwork<Vertex, Edge> {
   private Vertex south_dest;
   private Vertex west_dest;
 
-  private GraphState state = new GraphState();;
+  private GraphState state = new GraphState();
 
   public Map<Vertex, Integer> dists = new HashMap<>();
 
@@ -92,7 +93,7 @@ public class SubGraph implements MutableNetwork<Vertex, Edge> {
       for (int x = 0; x < 16; x++) {
         for (int z = 0; z < 16; z++) {
           Material material = snapshot.getBlockData(x, y, z).getMaterial();
-          EnumMap<IntegrityData, Float> data = getStructuralData(material);
+          EnumMap<Integrity, Float> data = Config.getStructuralData(material);
           createVertex(liveChunk.getBlock(x, y, z), data);
         }
       }
@@ -100,7 +101,7 @@ public class SubGraph implements MutableNetwork<Vertex, Edge> {
     MaxFlow.maxFlow(this, dists, src, dest);
   }
 
-  private void createVertex(Block block, EnumMap<IntegrityData, Float> data) {
+  private void createVertex(Block block, EnumMap<Integrity, Float> data) {
     Vertex fromIndex = new Vertex(block);
     int x = block.getX();
     int y = block.getY();
@@ -109,39 +110,39 @@ public class SubGraph implements MutableNetwork<Vertex, Edge> {
     // Connect blocks to each other
     if (y != 0) {
       toIndex = new Vertex(block.getRelative(BlockFace.DOWN));
-      MaxFlow.createEdge(network, fromIndex, toIndex, data.get(IntegrityData.DOWN));
+      MaxFlow.createEdge(network, fromIndex, toIndex, data.get(Integrity.DOWN));
     }
     if (y != 255) {
       toIndex = new Vertex(block.getRelative(BlockFace.UP));
-      MaxFlow.createEdge(network, fromIndex, toIndex, data.get(IntegrityData.UP));
+      MaxFlow.createEdge(network, fromIndex, toIndex, data.get(Integrity.UP));
     }
     // Changes must reflect in update()
     if (x > 0) {
       toIndex = new Vertex(block.getRelative(BlockFace.WEST));
-      MaxFlow.createEdge(network, fromIndex, toIndex, data.get(IntegrityData.WEST));
+      MaxFlow.createEdge(network, fromIndex, toIndex, data.get(Integrity.WEST));
     }
     if (z > 0) {
       toIndex = new Vertex(block.getRelative(BlockFace.NORTH));
-      MaxFlow.createEdge(network, fromIndex, toIndex, data.get(IntegrityData.NORTH));
+      MaxFlow.createEdge(network, fromIndex, toIndex, data.get(Integrity.NORTH));
     }
     // For SE directions, the edges that lead off-chunk will be created
     // This is for later computation of multi-chunk integrity
     // so there are no duplicate edges
     toIndex = new Vertex(block.getRelative(BlockFace.SOUTH));
-    MaxFlow.createEdge(network, fromIndex, toIndex, data.get(IntegrityData.SOUTH));
+    MaxFlow.createEdge(network, fromIndex, toIndex, data.get(Integrity.SOUTH));
     MaxFlow.createEdge(
         network,
         fromIndex,
         toIndex,
-        getStructuralData(block.getRelative(BlockFace.SOUTH).getType()).get(IntegrityData.NORTH));
+        Config.getStructuralData(block.getRelative(BlockFace.SOUTH).getType()).get(Integrity.NORTH));
 
     toIndex = new Vertex(block.getRelative(BlockFace.EAST));
-    MaxFlow.createEdge(network, fromIndex, toIndex, data.get(IntegrityData.EAST));
+    MaxFlow.createEdge(network, fromIndex, toIndex, data.get(Integrity.EAST));
     MaxFlow.createEdge(
         network,
         fromIndex,
         toIndex,
-        getStructuralData(block.getRelative(BlockFace.EAST).getType()).get(IntegrityData.WEST));
+        Config.getStructuralData(block.getRelative(BlockFace.EAST).getType()).get(Integrity.WEST));
 
     // Connect edges for cached flows from other chunks
     if (x == 0) {
@@ -162,7 +163,7 @@ public class SubGraph implements MutableNetwork<Vertex, Edge> {
     }
 
     // Add edge from source to block with capacity of block weight
-    MaxFlow.createEdge(network, src, fromIndex, data.get(IntegrityData.MASS));
+    MaxFlow.createEdge(network, src, fromIndex, data.get(Integrity.MASS));
     // Blocks on the bottom row will connect to the sink
     if (y == 0) {
       MaxFlow.createEdge(network, fromIndex, dest, Integer.MAX_VALUE);
@@ -180,39 +181,37 @@ public class SubGraph implements MutableNetwork<Vertex, Edge> {
           Material oldMaterial = snapshot.getBlockType(x, y, z);
           // If there is no structural change, do nothing
           if (newMaterial == oldMaterial) continue;
-          if (!isStructural(oldMaterial) && !isStructural(newMaterial)) continue;
+          if (!Config.isStructural(oldMaterial) && !Config.isStructural(newMaterial)) continue;
           // Change edge weights to the new data
-          EnumMap<IntegrityData, Float> data = getStructuralData(newMaterial);
+          EnumMap<Integrity, Float> data = Config.getStructuralData(newMaterial);
           // Record edge weights to be changed
           Block block = chunk.getBlock(x, y, z);
           Vertex reference = new Vertex(block);
-          toChange.put(EndpointPair.ordered(src, reference), data.get(IntegrityData.MASS));
+          toChange.put(EndpointPair.ordered(src, reference), data.get(Integrity.MASS));
           if (y != 255) {
             toChange.put(
-                EndpointPair.ordered(reference, new Vertex(block.getRelative(BlockFace.UP))),
-                data.get(IntegrityData.UP));
+                EndpointPair.ordered(reference, new Vertex(block.getRelative(BlockFace.UP))), data.get(Integrity.UP));
           }
           if (y != 0) {
             toChange.put(
                 EndpointPair.ordered(reference, new Vertex(block.getRelative(BlockFace.DOWN))),
-                data.get(IntegrityData.DOWN));
+                data.get(Integrity.DOWN));
           }
           if (z > 0) {
             toChange.put(
                 EndpointPair.ordered(reference, new Vertex(block.getRelative(BlockFace.NORTH))),
-                data.get(IntegrityData.NORTH));
+                data.get(Integrity.NORTH));
           }
           if (x > 0) {
             toChange.put(
                 EndpointPair.ordered(reference, new Vertex(block.getRelative(BlockFace.WEST))),
-                data.get(IntegrityData.WEST));
+                data.get(Integrity.WEST));
           }
           toChange.put(
-              EndpointPair.ordered(reference, new Vertex(block.getRelative(BlockFace.EAST))),
-              data.get(IntegrityData.EAST));
+              EndpointPair.ordered(reference, new Vertex(block.getRelative(BlockFace.EAST))), data.get(Integrity.EAST));
           toChange.put(
               EndpointPair.ordered(reference, new Vertex(block.getRelative(BlockFace.SOUTH))),
-              data.get(IntegrityData.SOUTH));
+              data.get(Integrity.SOUTH));
         }
       }
     }
@@ -235,18 +234,11 @@ public class SubGraph implements MutableNetwork<Vertex, Edge> {
         .filter(o -> o.isPresent())
         .map(
             o -> {
-              int[] xyz = o.get();
+              IntegerXYZ xyz = o.get();
               // TODO: send BlockData instead to verify the block being broken
-              return this.chunk.getBlock(xyz[0] & 0xF, xyz[1] & 0xFF, xyz[2] & 0xF);
+              return this.chunk.getBlock(xyz.x & 0xF, xyz.y & 0xFF, xyz.z & 0xF);
             })
         .toArray(Block[]::new);
-  }
-
-  static EnumMap<IntegrityData, Float> getStructuralData(Material material) {
-    if (!isStructural(material)) return Config.Instance().getBlockData().getEmpty();
-    EnumMap<IntegrityData, Float> data = Config.Instance().getBlockData().getData(material);
-    if (data == null) return Config.Instance().getBlockData().getDefault();
-    return data;
   }
 
   public GraphState getState() {
@@ -254,8 +246,12 @@ public class SubGraph implements MutableNetwork<Vertex, Edge> {
     return this.state;
   }
 
-  static boolean isStructural(Material material) {
-    return material.isSolid();
+  public ChunkSnapshot getSnapshot() {
+    return snapshot;
+  }
+
+  public Chunk getChunk() {
+    return chunk;
   }
 
   public int getX() {
