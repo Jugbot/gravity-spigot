@@ -27,9 +27,17 @@ public class Vertex {
     return Optional.of(new IntegerXYZ(x, yOrSpecial, z));
   }
 
+  public boolean isChunkOwned() {
+    return !(
+      -yOrSpecial == ReservedID.TEMP_DEST.value()   || 
+      -yOrSpecial == ReservedID.TEMP_SOURCE.value() || 
+      -yOrSpecial == ReservedID.SUPER_DEST.value()  || 
+      -yOrSpecial == ReservedID.SUPER_SOURCE.value()
+    );
+  }
+
   public Optional<IntegerXZ> getChunkXZ() {
-    if (-yOrSpecial == ReservedID.TEMP_DEST.value() || -yOrSpecial == ReservedID.TEMP_SOURCE.value())
-      return Optional.empty();
+    if (!isChunkOwned()) return Optional.empty();
     if (isBlock()) return Optional.of(new IntegerXZ(Math.floorDiv(x, 16), Math.floorDiv(z, 16)));
     return Optional.of(new IntegerXZ(x, z));
   }

@@ -27,9 +27,9 @@ public class MockChunk implements Chunk {
       for (int x = 0; x < 16; x++) {
         for (int z = 0; z < 16; z++) {
           if (y < MockWorld.HEIGHT) {
-            blocks[x][y][z] = new MockBlock(new MockBlockData(Material.DIRT), x, y, z);
+            blocks[x][y][z] = new MockBlock(new MockBlockData(Material.DIRT), x + cx * 16, y, z + cz * 16);
           } else {
-            blocks[x][y][z] = new MockBlock(new MockBlockData(Material.AIR), x, y, z);
+            blocks[x][y][z] = new MockBlock(new MockBlockData(Material.AIR), x + cx * 16, y, z + cz * 16);
           }
         }
       }

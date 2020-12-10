@@ -220,11 +220,11 @@ public class MaxFlowTest {
     resultA += MaxFlow.changeEdges(graphA, distsA, s, t, toChange);
     int resultB = MaxFlow.maxFlow(graphB, distsB, s, t);
     System.out.println("Graph A (MODIFIED)");
-    printGraph(graphA);
+    Utils.printGraph(graphA);
     System.out.println("Graph B (NEW)");
-    printGraph(graphB);
-    verifyGraph(graphA, s, t);
-    verifyGraph(graphB, s, t);
+    Utils.printGraph(graphB);
+    Utils.verifyGraph(graphA, s, t);
+    Utils.verifyGraph(graphB, s, t);
     assertTrue(MaxFlow.maxFlow(graphA, distsA, s, t) == 0 && MaxFlow.maxFlow(graphB, distsB, s, t) == 0);
     assertTrue(resultA == resultB, resultA + " (mod) != " + resultB + " (new)");
     int badA = MaxFlow.getGraphState(graphA, distsA, s, t).offendingNodes.size();
@@ -277,31 +277,5 @@ public class MaxFlowTest {
       if (a[i] != b[i]) count++;
     }
     return count;
-  }
-
-  private static void verifyGraph(MutableNetwork<Vertex, Edge> graph, Vertex s, Vertex t) {
-    // int[] debt = new int[graph.size()];
-    // for (int u = 0; u < graph.size(); u++) {
-    //   for (Edge edge : graph.get(u)) {
-    //     if (edge == null) continue;
-    //     assertTrue(edge.f <= edge.cap, "(" + u + "u) f " + edge.f + " > cap " + edge.cap);
-    //     assertEquals(edge.f, -graph.get(edge.t).get(edge.rev).f, 0.0f, "Edge flow is not mirrored!");
-    //     if (edge.f > 0) {
-    //       debt[u] -= edge.f;
-    //       debt[edge.t] += edge.f;
-    //     }
-    //   }
-    // }
-    // assertTrue(debt[s] == -debt[t]);
-    // debt[s] = 0;
-    // debt[t] = 0;
-    // assertTrue(Arrays.equals(debt, new int[graph.size()]));
-  }
-
-  private static void printGraph(MutableNetwork<Vertex, Edge> graph) {
-    // for (Edge edge : graph.edges()) {
-    //   EndpointPair<Vertex> uv = graph.incidentNodes(edge);
-    //   System.out.println("v(");
-    // }
   }
 }

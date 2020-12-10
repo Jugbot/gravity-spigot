@@ -64,7 +64,6 @@ public class MockWorld implements World {
   Table<Integer, Integer, Chunk> chunkmap = HashBasedTable.create();
 
   private MockWorld() {
-    chunkmap.put(0, 0, new MockChunk(0, 0));
   }
 
   public static MockWorld Instance() {
@@ -234,9 +233,9 @@ public class MockWorld implements World {
 
   @Override
   public Block getBlockAt(int x, int y, int z) {
-    Chunk optional = chunkmap.get(Math.floorDiv(x, 16), Math.floorDiv(z, 16));
-    if (optional == null) return new MockBlock(new MockBlockData(Material.AIR), x, y, z);
-    return optional.getBlock(x % 16, y, z % 16);
+    // Chunk optional = chunkmap.get(Math.floorDiv(x, 16), Math.floorDiv(z, 16));
+    // if (optional == null) return new MockBlock(new MockBlockData(Material.AIR), x, y, z);
+    return getChunkAt(Math.floorDiv(x, 16), Math.floorDiv(z, 16)).getBlock(x % 16, y, z % 16);
   }
 
   @Override
@@ -253,6 +252,9 @@ public class MockWorld implements World {
 
   @Override
   public Chunk getChunkAt(int x, int z) {
+    if (!chunkmap.contains(x, z)) {
+      chunkmap.put(x, z, new MockChunk(x, z));
+    }
     return chunkmap.get(x, z);
   }
 

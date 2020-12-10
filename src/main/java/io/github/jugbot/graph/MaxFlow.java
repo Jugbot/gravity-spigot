@@ -36,6 +36,16 @@ public class MaxFlow {
     }
   }
 
+  public static void removeEdge(MutableNetwork<Vertex, Edge> graph, Vertex a, Vertex b) {
+    graph.removeEdge(graph.edgeConnectingOrNull(a, b));
+    graph.removeEdge(graph.edgeConnectingOrNull(b, a));
+  }
+
+  public static void increaseFlow(MutableNetwork<Vertex, Edge> graph, Vertex a, Vertex b, float df) {
+    graph.edgeConnectingOrNull(a, b).f += df;
+    graph.edgeConnectingOrNull(b, a).f -= df;
+  }
+
   private static void createEdgeOrIncrement(MutableNetwork<Vertex, Edge> graph, Vertex u, Vertex v, float cap) {
     graph.addNode(u);
     graph.addNode(v);
