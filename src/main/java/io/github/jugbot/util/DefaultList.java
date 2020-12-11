@@ -10,8 +10,6 @@ import java.util.List;
 import java.util.AbstractList;
 import java.util.ListIterator;
 
-import org.omg.IOP.TAG_ALTERNATE_IIOP_ADDRESS;
-
 public class DefaultList<T> extends AbstractList<T> implements Serializable {
   private T[] list;
   private final T fallback;

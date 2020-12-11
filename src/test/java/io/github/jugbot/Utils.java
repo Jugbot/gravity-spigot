@@ -13,7 +13,7 @@ import io.github.jugbot.graph.Vertex;
 
 public class Utils {
 
-	static void verifyGraph(MutableNetwork<Vertex, Edge> graph, Vertex s, Vertex t) {
+  static void verifyGraph(MutableNetwork<Vertex, Edge> graph, Vertex s, Vertex t) {
     Map<Vertex, Float> debt = new HashMap<>();
     for (Vertex u : graph.nodes()) {
       for (Vertex v : graph.successors(u)) {
@@ -29,8 +29,7 @@ public class Utils {
     assertTrue(debt.values().parallelStream().allMatch(fl -> fl == 0f));
   }
 
-	static void printGraph(MutableNetwork<Vertex, Edge> graph) {
-    System.out.println(graph);  
+  static void printGraph(MutableNetwork<Vertex, Edge> graph) {
+    System.out.println(graph);
   }
-  
 }

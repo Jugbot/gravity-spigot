@@ -28,12 +28,10 @@ public class Vertex {
   }
 
   public boolean isChunkOwned() {
-    return !(
-      -yOrSpecial == ReservedID.TEMP_DEST.value()   || 
-      -yOrSpecial == ReservedID.TEMP_SOURCE.value() || 
-      -yOrSpecial == ReservedID.SUPER_DEST.value()  || 
-      -yOrSpecial == ReservedID.SUPER_SOURCE.value()
-    );
+    return !(-yOrSpecial == ReservedID.TEMP_DEST.value()
+        || -yOrSpecial == ReservedID.TEMP_SOURCE.value()
+        || -yOrSpecial == ReservedID.SUPER_DEST.value()
+        || -yOrSpecial == ReservedID.SUPER_SOURCE.value());
   }
 
   public Optional<IntegerXZ> getChunkXZ() {

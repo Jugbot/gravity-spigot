@@ -9,8 +9,8 @@ import io.github.jugbot.graph.Edge;
 import io.github.jugbot.graph.Vertex;
 
 public class Asserts {
-  
-	public static void verifyGraph(MutableNetwork<Vertex, Edge> graph, Vertex s, Vertex t) {
+
+  public static void verifyGraph(MutableNetwork<Vertex, Edge> graph, Vertex s, Vertex t) {
     Map<Vertex, Float> debt = new HashMap<>();
     for (Vertex u : graph.nodes()) {
       for (Vertex v : graph.successors(u)) {

@@ -65,7 +65,7 @@ public class SuperGraph extends AbstractNetwork<Vertex, Edge> implements Mutable
     if (subgraphs.contains(x + 1, z)) toChange.putAll(stitchChunks(subgraph, subgraphs.get(x + 1, z)));
     if (subgraphs.contains(x, z - 1)) toChange.putAll(stitchChunks(subgraph, subgraphs.get(x, z - 1)));
     if (subgraphs.contains(x, z + 1)) toChange.putAll(stitchChunks(subgraph, subgraphs.get(x, z + 1)));
-    // MaxFlow.changeEdges(this, dists, src, dest, toChange);
+    MaxFlow.changeEdges(this, dists, src, dest, toChange);
     return true;
   }
 
@@ -235,33 +235,27 @@ public class SuperGraph extends AbstractNetwork<Vertex, Edge> implements Mutable
     // add chunk bordering vertex
     int blockX = blockPos.get().x % 16;
     int blockZ = blockPos.get().z % 16;
-    if (blockX == 0 || blockX == 15){
-      Network<Vertex, Edge> subgraph = subgraphs.get(chunkPos.get().x + (blockX == 0 ?  -1 : 1), chunkPos.get().z);
+    if (blockX == 0 || blockX == 15) {
+      Network<Vertex, Edge> subgraph = subgraphs.get(chunkPos.get().x + (blockX == 0 ? -1 : 1), chunkPos.get().z);
       if (subgraph != null) result.add(subgraph);
     }
-    if (blockZ == 0 || blockZ == 15){
-      Network<Vertex, Edge> subgraph = subgraphs.get(chunkPos.get().x, chunkPos.get().z + (blockZ == 0 ?  -1 : 1));
+    if (blockZ == 0 || blockZ == 15) {
+      Network<Vertex, Edge> subgraph = subgraphs.get(chunkPos.get().x, chunkPos.get().z + (blockZ == 0 ? -1 : 1));
       if (subgraph != null) result.add(subgraph);
     }
-    return result;   
+    return result;
   }
 
   @Override
   public Set<Vertex> nodes() {
     // Note identically hashed objects are picked at random
-    return subGraphStream()
-        .map(net -> net.nodes())
-        .flatMap(Set::stream)
-        .collect(Collectors.toSet());
+    return subGraphStream().map(net -> net.nodes()).flatMap(Set::stream).collect(Collectors.toSet());
   }
 
   @Override
   public Set<Edge> edges() {
     // Note identically hashed objects are picked at random
-    return subGraphStream()
-        .map(net -> net.edges())
-        .flatMap(Set::stream)
-        .collect(Collectors.toSet());
+    return subGraphStream().map(net -> net.edges()).flatMap(Set::stream).collect(Collectors.toSet());
   }
 
   @Override
@@ -353,10 +347,7 @@ public class SuperGraph extends AbstractNetwork<Vertex, Edge> implements Mutable
   @Override
   public EndpointPair<Vertex> incidentNodes(Edge edge) {
     Optional<EndpointPair<Vertex>> optional =
-        subGraphStream()
-        .filter(net -> net.edges().contains(edge))
-        .map(net -> net.incidentNodes(edge))
-        .findAny();
+        subGraphStream().filter(net -> net.edges().contains(edge)).map(net -> net.incidentNodes(edge)).findAny();
     if (!optional.isPresent()) throw new IllegalArgumentException();
     return optional.get();
   }
@@ -388,9 +379,7 @@ public class SuperGraph extends AbstractNetwork<Vertex, Edge> implements Mutable
     return transientSubGraph.removeEdge(edge);
   }
 
-  /**
-   * AbstractGraph Overrides
-   */
+  /** AbstractGraph Overrides */
 
   /*
   @Override

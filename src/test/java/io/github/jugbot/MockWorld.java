@@ -63,8 +63,7 @@ public class MockWorld implements World {
 
   Table<Integer, Integer, Chunk> chunkmap = HashBasedTable.create();
 
-  private MockWorld() {
-  }
+  private MockWorld() {}
 
   public static MockWorld Instance() {
     if (instance == null) instance = new MockWorld();
