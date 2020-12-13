@@ -26,7 +26,7 @@ public class MockChunk implements Chunk {
     for (int y = 0; y < 256; y++) {
       for (int x = 0; x < 16; x++) {
         for (int z = 0; z < 16; z++) {
-          if (y < MockWorld.HEIGHT) {
+          if (y < MockWorld.Instance().HEIGHT) {
             blocks[x][y][z] = new MockBlock(new MockBlockData(Material.DIRT), x + cx * 16, y, z + cz * 16);
           } else {
             blocks[x][y][z] = new MockBlock(new MockBlockData(Material.AIR), x + cx * 16, y, z + cz * 16);
@@ -53,7 +53,7 @@ public class MockChunk implements Chunk {
 
   @Override
   public Block getBlock(int x, int y, int z) {
-    return blocks[x][y][z];
+    return blocks[(x & 0xF)][y & 0xFF][(z & 0xF)];
   }
 
   @Override

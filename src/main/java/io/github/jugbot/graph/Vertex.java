@@ -106,6 +106,7 @@ public class Vertex {
 
   @Override
   public String toString() {
-    return String.format("Vertex(%d, %d, %d, uid:%x)", x, yOrSpecial, z, uid);
+    if (isBlock()) return String.format("Vertex(%d, %d, %d, uid:%x)", x, yOrSpecial, z, uid);
+    else return String.format("Vertex(%d, %s, %d, uid:%x)", x, ReservedID.values()[-yOrSpecial - 1].name(), z, uid);
   }
 }

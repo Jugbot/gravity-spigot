@@ -23,12 +23,8 @@ public class ChunkProcessor {
   // Operation queue and status
   private LinkedHashSet<Chunk> chunkUpdateQueue = new LinkedHashSet<>();
   private Set<Chunk> inProgress = new HashSet<>();
-  private LinkedHashSet<Chunk> crossChunkUpdateQueue = new LinkedHashSet<>();
-  // Loaded chunks
-  // TODO: use SoftReference cache for flexible memory use
+  private LinkedHashSet<SuperGraph> crossChunkUpdateQueue = new LinkedHashSet<>();
   private Map<Chunk, SubGraph> loadedChunks = new HashMap<>();
-
-  private SuperGraph problemsolver = new SuperGraph();
 
   public static ChunkProcessor Instance() {
     if (instance == null) instance = new ChunkProcessor();
@@ -89,11 +85,7 @@ public class ChunkProcessor {
     // }
   }
 
-  public void debugResetChunk(Chunk chunk) {
-    loadedChunks.put(chunk, new SubGraph(chunk));
-  }
-
-  public SubGraph getChunk(Chunk chunk) {
+  public SubGraph getChunkGraph(Chunk chunk) {
     SubGraph integrityChunk = loadedChunks.get(chunk);
     if (integrityChunk == null) {
       App.Instance().getLogger().fine("Chunk not loaded! " + chunk.toString());
@@ -101,10 +93,6 @@ public class ChunkProcessor {
       integrityChunk = loadedChunks.get(chunk);
     }
     return integrityChunk;
-  }
-
-  public void queueChunkUpdate(Chunk chunk) {
-    chunkUpdateQueue.add(chunk);
   }
 
   private void processChunks() {
@@ -122,7 +110,7 @@ public class ChunkProcessor {
       AsyncBukkit.doTask(
           () -> {
             App.Instance().getLogger().fine("Thread Started");
-            SubGraph integrityChunk = getChunk(chunk);
+            SubGraph integrityChunk = getChunkGraph(chunk);
             // Update integrity
             integrityChunk.update(chunk.getChunkSnapshot());
             // Thread & Callback
@@ -142,5 +130,13 @@ public class ChunkProcessor {
             App.Instance().getLogger().fine("Thread Finished");
           });
     }
+  }
+
+  public void queueChunkUpdate(Chunk chunk) {
+    chunkUpdateQueue.add(chunk);
+  }
+
+  public void debugResetChunk(Chunk chunk) {
+    loadedChunks.put(chunk, new SubGraph(chunk));
   }
 }

@@ -209,6 +209,7 @@ public class MaxFlow {
    * @param dest Destination Vertex
    * @return Vertex set that has capacity left over from src
    */
+  @Deprecated
   private static List<Vertex> getOffendingVertices(
       MutableNetwork<Vertex, Edge> graph, Map<Vertex, Integer> dists, Vertex src, Vertex dest) {
     List<Vertex> result = new ArrayList<>();

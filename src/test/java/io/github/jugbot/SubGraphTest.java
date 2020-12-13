@@ -2,44 +2,62 @@ package io.github.jugbot;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mockStatic;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import io.github.jugbot.graph.GraphState;
 import io.github.jugbot.graph.SubGraph;
 import io.github.jugbot.util.IntegerXZ;
 
 public class SubGraphTest {
-
   private SubGraph subject;
-  private MockWorld mockedWorld;
-  private static MockedStatic<Config> mocked = mockStatic(Config.class);
 
-  @BeforeEach
-  public void setup() throws Exception {
-    IntegrityData idc = new IntegrityData();
-    mocked.when(() -> Config.getStructuralData(Material.AIR)).thenReturn(idc.getEmpty());
-    mocked.when(() -> Config.getStructuralData(Material.DIRT)).thenReturn(idc.getDefault());
-    mocked.when(() -> Config.isStructural(Material.AIR)).thenReturn(false);
-    mocked.when(() -> Config.isStructural(Material.DIRT)).thenReturn(true);
+  @BeforeAll
+  public static void createMocks() {
+    MockConfig.Instance();
+    MockWorld.Reset();
     MockWorld.HEIGHT = 32;
-    mockedWorld = MockWorld.Instance();
-    subject = new SubGraph(mockedWorld.getChunkAt(0, 0));
+  }
+
+  static void assertGraphStructure(SubGraph subject) {
+    int specialNodes = 10;
+    int chunkNodes = 256 * 16 * 16;
+    int V = chunkNodes + specialNodes;
+    assertEquals(V, subject.nodes().size());
+    // count undirected, multipied by 2
+    int srcEdges = chunkNodes + 4;
+    int destEdges = 16 * 16 + 4;
+    int blockEdges = chunkNodes * 3 - (16 * 16 + 2 * 16 * 256);
+    int sideEdges = (16 * 256) * 2 * 4;
+    int E = (blockEdges + sideEdges + srcEdges + destEdges) * 2;
+    assertEquals(E, subject.edges().size());
   }
 
   @Nested
   class ChunkAtOrigin {
+    @BeforeEach
+    public void setup() throws Exception {
+      subject = new SubGraph(MockWorld.Instance().getChunkAt(0, 0));
+    }
+
+    @Test
+    public void expectedSize() {
+      assertGraphStructure(subject);
+    }
+
     @Test
     public void cornerNW() throws Exception {
-      Block offending = mockedWorld.getBlockAt(0, 128, 0);
+      Block offending = MockWorld.Instance().getBlockAt(0, 128, 0);
       ((MockBlockData) offending.getBlockData()).material = Material.DIRT;
-      GraphState state = subject.update(mockedWorld.getChunkAt(0, 0).getChunkSnapshot());
+      GraphState state = subject.update(MockWorld.Instance().getChunkAt(0, 0).getChunkSnapshot());
 
       assertEquals(1, state.offendingNodes.size());
       assertEquals(2, state.dependantChunks.size());
@@ -47,16 +65,16 @@ public class SubGraphTest {
           state.dependantChunks.contains(new IntegerXZ(0, -1)) && state.dependantChunks.contains(new IntegerXZ(-1, 0)));
 
       ((MockBlockData) offending.getBlockData()).material = Material.AIR;
-      state = subject.update(mockedWorld.getChunkAt(0, 0).getChunkSnapshot());
+      state = subject.update(MockWorld.Instance().getChunkAt(0, 0).getChunkSnapshot());
       assertEquals(0, state.offendingNodes.size());
       assertEquals(0, state.dependantChunks.size());
     }
 
     @Test
     public void cornerSE() throws Exception {
-      Block offending = mockedWorld.getBlockAt(15, 128, 15);
+      Block offending = MockWorld.Instance().getBlockAt(15, 128, 15);
       ((MockBlockData) offending.getBlockData()).material = Material.DIRT;
-      GraphState state = subject.update(mockedWorld.getChunkAt(0, 0).getChunkSnapshot());
+      GraphState state = subject.update(MockWorld.Instance().getChunkAt(0, 0).getChunkSnapshot());
 
       assertEquals(1, state.offendingNodes.size());
       assertEquals(2, state.dependantChunks.size());
@@ -64,13 +82,13 @@ public class SubGraphTest {
           state.dependantChunks.contains(new IntegerXZ(0, 1)) && state.dependantChunks.contains(new IntegerXZ(1, 0)));
 
       ((MockBlockData) offending.getBlockData()).material = Material.AIR;
-      state = subject.update(mockedWorld.getChunkAt(0, 0).getChunkSnapshot());
+      state = subject.update(MockWorld.Instance().getChunkAt(0, 0).getChunkSnapshot());
       assertEquals(0, state.offendingNodes.size());
       assertEquals(0, state.dependantChunks.size());
 
-      offending = mockedWorld.getBlockAt(8, 128, 8);
+      offending = MockWorld.Instance().getBlockAt(8, 128, 8);
       ((MockBlockData) offending.getBlockData()).material = Material.DIRT;
-      state = subject.update(mockedWorld.getChunkAt(0, 0).getChunkSnapshot());
+      state = subject.update(MockWorld.Instance().getChunkAt(0, 0).getChunkSnapshot());
       assertEquals(1, state.offendingNodes.size());
       assertEquals(0, state.dependantChunks.size());
     }

@@ -14,19 +14,19 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 public class Config {
-  private static Config instance = null;
-  private IntegrityData blockData;
+  protected static Config instance = null;
+  protected IntegrityData blockData;
 
   public static Config Instance() {
     if (instance == null) instance = new Config();
     return instance;
   }
 
-  private Config() {
+  protected Config() {
     loadBlockData();
   }
 
-  private void loadBlockData() {
+  protected void loadBlockData() {
     File blockDataConfigFile;
     if ((blockDataConfigFile = new File(App.Instance().getDataFolder(), "blockdata.csv")).exists()) {
       loadBlockDataCSV(blockDataConfigFile);
@@ -101,14 +101,14 @@ public class Config {
     }
   }
 
-  public static EnumMap<Integrity, Float> getStructuralData(Material material) {
-    if (!isStructural(material)) return Instance().blockData.getEmpty();
-    EnumMap<Integrity, Float> data = Instance().blockData.getData(material);
-    if (data == null) return Instance().blockData.getDefault();
+  public EnumMap<Integrity, Float> getStructuralData(Material material) {
+    if (!isStructural(material)) return blockData.getEmpty();
+    EnumMap<Integrity, Float> data = blockData.getData(material);
+    if (data == null) return blockData.getDefault();
     return data;
   }
 
-  public static boolean isStructural(Material material) {
+  public boolean isStructural(Material material) {
     return material.isSolid();
   }
 }

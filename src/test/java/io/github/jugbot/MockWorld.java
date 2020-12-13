@@ -70,6 +70,11 @@ public class MockWorld implements World {
     return instance;
   }
 
+  public static void Reset() {
+    instance = null;
+    HEIGHT = 0;
+  }
+
   @Override
   public Set<String> getListeningPluginChannels() {
     throw new NotImplementedException();

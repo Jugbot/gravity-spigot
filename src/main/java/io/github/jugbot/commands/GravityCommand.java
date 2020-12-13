@@ -47,7 +47,7 @@ public class GravityCommand implements CommandExecutor {
                 (args.size() > 0 && args.get(0).equals("here"))
                     ? player.getLocation().getBlock()
                     : player.getTargetBlockExact(16);
-            SubGraph graph = ChunkProcessor.Instance().getChunk(block.getChunk());
+            SubGraph graph = ChunkProcessor.Instance().getChunkGraph(block.getChunk());
             Vertex inspected = new Vertex(block);
             player.sendMessage(inspected.toString());
             Edge[] outEdges = new Edge[8];
