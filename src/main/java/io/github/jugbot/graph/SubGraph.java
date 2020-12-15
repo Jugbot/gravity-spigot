@@ -27,6 +27,7 @@ import io.github.jugbot.App;
 import io.github.jugbot.Config;
 import io.github.jugbot.Integrity;
 import io.github.jugbot.util.IntegerXYZ;
+import io.github.jugbot.util.IntegerXZ;
 
 public class SubGraph extends ForwardingMutableNetwork<Vertex, Edge> {
   private final Chunk chunk;
@@ -213,7 +214,7 @@ public class SubGraph extends ForwardingMutableNetwork<Vertex, Edge> {
     MaxFlow.changeEdges(network, dists, src, dest, toChange);
     // Run for edges whoes capacities were set to zero
     // Will only remove if augment capacity is also zero.
-    this.state = MaxFlow.getGraphState(network, dists, src, dest);
+    calculateState();
     return this.state;
   }
 
@@ -231,6 +232,60 @@ public class SubGraph extends ForwardingMutableNetwork<Vertex, Edge> {
               return this.chunk.getBlock(xyz.x & 0xF, xyz.y & 0xFF, xyz.z & 0xF);
             })
         .toArray(Block[]::new);
+  }
+
+  public GraphState calculateState() {
+    GraphState result = new GraphState();
+    // Call to graph.nodes() preserves order
+    for (Vertex v : this.nodes()) {
+      if (dists.getOrDefault(v, -1) == -1) continue;
+      Optional<IntegerXYZ> xyzOpt = v.getBlockXYZ();
+      // Only block-like vertices are relevant
+      if (xyzOpt.isPresent()) {
+        // Mark if the current group of offending blocks relies on another chunk
+        IntegerXYZ xyz = xyzOpt.get();
+        int x = xyz.x;
+        int z = xyz.z;
+        boolean isOffending = false;
+        Edge e = this.edgeConnectingOrNull(src, v);
+        if (e.cap > 0) {
+          isOffending = true;
+        }
+        if (x % 16 == 0) { // WEST
+          Edge e2 = this.edgeConnectingOrNull(this.west_src, v);
+          if (e.cap > 0 || e2.cap > 0) {
+            isOffending = true;
+            result.dependantChunks.add(new IntegerXZ(Math.floorDiv(x - 1, 16), Math.floorDiv(z, 16)));
+          }
+        }
+        if ((x + 1) % 16 == 0) { // EAST
+          Edge e2 = this.edgeConnectingOrNull(this.east_src, v);
+          if (e.cap > 0 || e2.cap > 0) {
+            isOffending = true;
+            result.dependantChunks.add(new IntegerXZ(Math.floorDiv(x + 1, 16), Math.floorDiv(z, 16)));
+          }
+        }
+        if (z % 16 == 0) { // NORTH
+          Edge e2 = this.edgeConnectingOrNull(this.north_src, v);
+          if (e.cap > 0 || e2.cap > 0) {
+            isOffending = true;
+            result.dependantChunks.add(new IntegerXZ(Math.floorDiv(x, 16), Math.floorDiv(z - 1, 16)));
+          }
+        }
+        if ((z + 1) % 16 == 0) { // SOUTH
+          Edge e2 = this.edgeConnectingOrNull(this.south_src, v);
+          if (e.cap > 0 || e2.cap > 0) {
+            isOffending = true;
+            result.dependantChunks.add(new IntegerXZ(Math.floorDiv(x, 16), Math.floorDiv(z + 1, 16)));
+          }
+        }
+        if (isOffending) {
+          result.offendingNodes.add(v);
+        }
+      }
+    }
+    this.state = result;
+    return this.state;
   }
 
   public GraphState getState() {

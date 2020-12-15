@@ -11,6 +11,7 @@ import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableNetwork;
 import com.google.common.graph.NetworkBuilder;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Test;
@@ -168,7 +169,8 @@ public class MaxFlowTest {
   //   assertTrue(badA == badB, badA + " (mod) != " + badB + " (new)");
   // }
 
-  // @RepeatedTest(10)
+  @Disabled
+  @RepeatedTest(1)
   public void updatesEdgesABTest(RepetitionInfo info) {
     Random random = new Random();
     long seed = random.nextLong();
@@ -227,12 +229,13 @@ public class MaxFlowTest {
     Utils.verifyGraph(graphB, s, t);
     assertTrue(MaxFlow.maxFlow(graphA, distsA, s, t) == 0 && MaxFlow.maxFlow(graphB, distsB, s, t) == 0);
     assertTrue(resultA == resultB, resultA + " (mod) != " + resultB + " (new)");
-    int badA = MaxFlow.getGraphState(graphA, distsA, s, t).offendingNodes.size();
-    int badB = MaxFlow.getGraphState(graphB, distsB, s, t).offendingNodes.size();
-    assertTrue(badA == badB, badA + " (mod) != " + badB + " (new)");
+    // int badA = MaxFlow.getGraphState(graphA, distsA, s, t).offendingNodes.size();
+    // int badB = MaxFlow.getGraphState(graphB, distsB, s, t).offendingNodes.size();
+    // assertTrue(badA == badB, badA + " (mod) != " + badB + " (new)");
   }
 
   @Test
+  @Disabled
   public void bigMaxFlow() {
     Random random = new Random();
     long seed = System.currentTimeMillis();
@@ -266,7 +269,7 @@ public class MaxFlowTest {
     int resultA = MaxFlow.maxFlow(graphA, distsA, s, t);
     System.out.println("Graph A (MODIFIED)");
     // printGraph(graphA);
-    // verifyGraph(graphA, s, t);
+    Utils.verifyGraph(graphA, s, t);
   }
 
   private static int differences(int[] a, int[] b) {

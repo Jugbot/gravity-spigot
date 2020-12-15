@@ -2,7 +2,10 @@ package io.github.jugbot;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.List;
 
 import com.google.common.base.Charsets;
 
@@ -15,7 +18,8 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 public class Config {
   protected static Config instance = null;
-  protected IntegrityData blockData;
+  protected IntegrityData blockData = new IntegrityData();;
+  private int maxChunkDistance = 5;
 
   public static Config Instance() {
     if (instance == null) instance = new Config();
@@ -27,18 +31,24 @@ public class Config {
   }
 
   protected void loadBlockData() {
-    File blockDataConfigFile;
-    if ((blockDataConfigFile = new File(App.Instance().getDataFolder(), "blockdata.csv")).exists()) {
-      loadBlockDataCSV(blockDataConfigFile);
-    } else if ((blockDataConfigFile = new File(App.Instance().getDataFolder(), "blockdata.yml")).exists()) {
-      loadBlockDataYAML(blockDataConfigFile);
-    } else {
+    // YML data
+    File blockDataConfigFile = new File(App.Instance().getDataFolder(), "blockdata.yml");
+    if (!blockDataConfigFile.exists()) {
       App.Instance().getLogger().info("blockdata.yml doesn't exist, creating it...");
       blockDataConfigFile.getParentFile().mkdirs();
       App.Instance().saveResource("blockdata.yml", false);
-      loadBlockDataYAML(blockDataConfigFile);
     }
-    if (blockData == null || blockData.blocks.size() == 0) {
+    loadBlockDataYAML(blockDataConfigFile);
+    // CSV data
+    blockDataConfigFile = new File(App.Instance().getDataFolder(), "blockdata.csv");
+    if (!blockDataConfigFile.exists()) {
+      App.Instance().getLogger().info("blockdata.csv doesn't exist, creating it...");
+      blockDataConfigFile.getParentFile().mkdirs();
+      App.Instance().saveResource("blockdata.csv", false);
+    }
+    loadBlockDataCSV(blockDataConfigFile);
+
+    if (blockData.blocks.size() == 0) {
       App.Instance().getLogger().info("No block data found in blockdata config!");
       blockData = new IntegrityData();
     }
@@ -55,7 +65,7 @@ public class Config {
   }
 
   private void loadBlockDataCSV(File blockDataConfigFile) {
-    blockData = new IntegrityData();
+    ArrayList<Material> conflicting = new ArrayList<>();
     try (CSVParser parser = CSVParser.parse(blockDataConfigFile, Charsets.UTF_8, CSVFormat.DEFAULT)) {
       for (CSVRecord record : parser.getRecords()) {
         App.Instance().getLogger().fine(record.toString());
@@ -94,10 +104,19 @@ public class Config {
                       + "\" must have data that is a positive int, skipping.");
           continue;
         }
+        if (blockData.blocks.containsKey(material)) {
+          conflicting.add(material);
+        }
         blockData.blocks.put(material, data);
       }
     } catch (IOException e) {
       e.printStackTrace();
+    }
+    if (!conflicting.isEmpty()) {
+      App.Instance().getLogger().warning("Blockdata yml and csv have conflicting integrity data:");
+      App.Instance()
+          .getLogger()
+          .warning(conflicting.stream().map(mat -> mat.name()).reduce((a, b) -> a + ", " + b).get());
     }
   }
 
@@ -106,6 +125,10 @@ public class Config {
     EnumMap<Integrity, Float> data = blockData.getData(material);
     if (data == null) return blockData.getDefault();
     return data;
+  }
+
+  public int getMaxChunkDistance() {
+    return maxChunkDistance;
   }
 
   public boolean isStructural(Material material) {

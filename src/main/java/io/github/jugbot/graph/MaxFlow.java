@@ -222,29 +222,4 @@ public class MaxFlow {
     }
     return result;
   }
-
-  // TODO: separate groups of blocks that go off chunk
-  public static GraphState getGraphState(
-      MutableNetwork<Vertex, Edge> graph, Map<Vertex, Integer> dists, Vertex src, Vertex dest) {
-    GraphState result = new GraphState();
-    // Call to graph.nodes() preserves order
-    for (Vertex v : graph.nodes()) {
-      Optional<Edge> e = graph.edgeConnecting(src, v);
-      if (dists.getOrDefault(v, -1) > 0 && e.isPresent() && e.get().cap > 0) {
-        Optional<IntegerXYZ> xyzOpt = v.getBlockXYZ();
-        if (xyzOpt.isPresent()) {
-          result.offendingNodes.add(v);
-          // Mark if the current group of offending blocks relies on another chunk
-          IntegerXYZ xyz = xyzOpt.get();
-          int x = xyz.x;
-          int z = xyz.z;
-          if (x % 16 == 0) result.dependantChunks.add(new IntegerXZ(Math.floorDiv(x - 1, 16), Math.floorDiv(z, 16)));
-          if (x % 16 == 15) result.dependantChunks.add(new IntegerXZ(Math.floorDiv(x + 1, 16), Math.floorDiv(z, 16)));
-          if (z % 16 == 0) result.dependantChunks.add(new IntegerXZ(Math.floorDiv(x, 16), Math.floorDiv(z - 1, 16)));
-          if (z % 16 == 15) result.dependantChunks.add(new IntegerXZ(Math.floorDiv(x, 16), Math.floorDiv(z + 1, 16)));
-        }
-      }
-    }
-    return result;
-  }
 }

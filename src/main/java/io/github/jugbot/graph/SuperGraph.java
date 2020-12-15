@@ -32,6 +32,7 @@ import com.google.common.math.IntMath;
 import org.apache.commons.lang.NotImplementedException;
 import org.bukkit.Chunk;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 
 import io.github.jugbot.Asserts;
@@ -43,66 +44,108 @@ import io.github.jugbot.util.IntegerXZ;
 
 public class SuperGraph extends ForwardingMutableNetwork<Vertex, Edge> {
   // graphs stored by chunk coordinates
-  private Table<Integer, Integer, SubGraph> subgraphs = HashBasedTable.create();
-  private MutableNetwork<Vertex, Edge> superGraph = NetworkBuilder.directed().build();
+  private Table<Integer, Integer, SubGraph> subgraphGrid = HashBasedTable.create();
+  private MutableNetwork<Vertex, Edge> network = NetworkBuilder.directed().build();
   public Map<Vertex, Integer> dists = new HashMap<>();
   public final Vertex src = new Vertex(ReservedID.SUPER_SOURCE);
   public final Vertex dest = new Vertex(ReservedID.SUPER_DEST);
 
-  public SuperGraph() {
+  private GraphState state;
+  private int iteration = 0;
+
+  private World world;
+  private IntegerXZ chunkOrigin;
+
+  public SuperGraph(SubGraph starter) {
+    this(starter.getWorld());
+    this.chunkOrigin = new IntegerXZ(starter.getX(), starter.getZ());
+    this.state = new GraphState();
+    this.state.dependantChunks = starter.getState().dependantChunks;
+  }
+
+  public SuperGraph(World world) {
     this.addNode(src);
     this.addNode(dest);
+    this.world = world;
   }
 
-  private void cloneGraphData(SubGraph subgraph) {
-    for (Vertex node : subgraph.nodes()) {
-      this.addNode(node);
-    }
-    for (Edge edge : subgraph.edges()) {
-      EndpointPair<Vertex> endpointPair = subgraph.incidentNodes(edge);
-      this.addEdge(endpointPair.nodeU(), endpointPair.nodeV(), edge);
-    }
-  }
-
-  private void deleteGraphData(SubGraph subGraph) {
-    // Dont bother actually deleting everything, just the edges that matter
-    // Redirecting flow happens elsewhere
-  }
-
-  public boolean add(SubGraph subgraph) {
-    cloneGraphData(subgraph);
+  private Map<EndpointPair<Vertex>, Float> addOne(SubGraph subgraph) {
     int x = subgraph.getX();
     int z = subgraph.getZ();
-    if (subgraphs.contains(x, z)) return false;
-    subgraphs.put(x, z, subgraph);
-    // TODO: fix flow on these two edges
+    Map<EndpointPair<Vertex>, Float> toChange = new HashMap<>();
+    if (subgraphGrid.contains(x, z)) return toChange;
+    if (!correctWorld(subgraph)) throw new IllegalArgumentException("Subgraph world does not match Supergraph!");
+    cloneGraphData(subgraph);
+    subgraphGrid.put(x, z, subgraph);
     float maxFlow = subgraph.outEdges(subgraph.src).stream().map(Edge -> Edge.f).reduce(0f, (a, b) -> a + b);
     MaxFlow.createEdge(this, src, subgraph.src, Float.POSITIVE_INFINITY);
     MaxFlow.increaseFlow(this, src, subgraph.src, maxFlow);
     MaxFlow.createEdge(this, subgraph.dest, dest, Float.POSITIVE_INFINITY);
     MaxFlow.increaseFlow(this, subgraph.dest, dest, maxFlow);
-    Map<EndpointPair<Vertex>, Float> toChange = new HashMap<>();
-    if (subgraphs.contains(x - 1, z)) toChange.putAll(stitchChunks(subgraphs.get(x - 1, z), subgraph));
-    if (subgraphs.contains(x + 1, z)) toChange.putAll(stitchChunks(subgraph, subgraphs.get(x + 1, z)));
-    if (subgraphs.contains(x, z - 1)) toChange.putAll(stitchChunks(subgraphs.get(x, z - 1), subgraph));
-    if (subgraphs.contains(x, z + 1)) toChange.putAll(stitchChunks(subgraph, subgraphs.get(x, z + 1)));
-    MaxFlow.changeEdges(this, dists, src, dest, toChange);
-    return true;
+    if (subgraphGrid.contains(x - 1, z)) toChange.putAll(stitchChunks(subgraphGrid.get(x - 1, z), subgraph));
+    if (subgraphGrid.contains(x + 1, z)) toChange.putAll(stitchChunks(subgraph, subgraphGrid.get(x + 1, z)));
+    if (subgraphGrid.contains(x, z - 1)) toChange.putAll(stitchChunks(subgraphGrid.get(x, z - 1), subgraph));
+    if (subgraphGrid.contains(x, z + 1)) toChange.putAll(stitchChunks(subgraph, subgraphGrid.get(x, z + 1)));
+    return toChange;
   }
 
-  public boolean remove(SubGraph subgraph) {
+  public void addAll(Collection<SubGraph> subgraphs) {
+    Map<EndpointPair<Vertex>, Float> toChange = new HashMap<>();
+    for (SubGraph subgraph : subgraphs) {
+      toChange.putAll(addOne(subgraph));
+    }
+    if (toChange.isEmpty()) return;
+    iteration++;
+    MaxFlow.changeEdges(this, dists, src, dest, toChange);
+    calculateState();
+  }
+
+  public void add(SubGraph subgraph) {
+    Map<EndpointPair<Vertex>, Float> toChange = addOne(subgraph);
+    if (toChange.isEmpty()) return;
+    iteration++;
+    MaxFlow.changeEdges(this, dists, src, dest, toChange);
+    calculateState();
+  }
+
+  private void removeOne(SubGraph subgraph) {
     // beware adding again after removal
     int x = subgraph.getX();
     int z = subgraph.getZ();
-    if (!subgraphs.contains(x, z)) return false;
-    if (subgraphs.contains(x - 1, z)) unravelChunks(subgraphs.get(x - 1, z), subgraph);
-    if (subgraphs.contains(x + 1, z)) unravelChunks(subgraph, subgraphs.get(x + 1, z));
-    if (subgraphs.contains(x, z - 1)) unravelChunks(subgraphs.get(x, z - 1), subgraph);
-    if (subgraphs.contains(x, z + 1)) unravelChunks(subgraph, subgraphs.get(x, z + 1));
-    subgraphs.remove(x, z);
+    if (!subgraphGrid.contains(x, z)) return;
+    if (subgraphGrid.contains(x - 1, z)) unravelChunks(subgraphGrid.get(x - 1, z), subgraph);
+    if (subgraphGrid.contains(x + 1, z)) unravelChunks(subgraph, subgraphGrid.get(x + 1, z));
+    if (subgraphGrid.contains(x, z - 1)) unravelChunks(subgraphGrid.get(x, z - 1), subgraph);
+    if (subgraphGrid.contains(x, z + 1)) unravelChunks(subgraph, subgraphGrid.get(x, z + 1));
+    subgraphGrid.remove(x, z);
     MaxFlow.removeEdge(this, src, subgraph.src);
     MaxFlow.removeEdge(this, subgraph.dest, dest);
-    return true;
+  }
+
+  public void removeAll() {
+    // We dont have to worry about MaxFlow.changeEdges here :)
+    for (SubGraph subgraph : new ArrayList<>(subgraphGrid.values())) {
+      removeOne(subgraph);
+    }
+    // Empty state
+    calculateState();
+  }
+
+  public void remove(SubGraph subgraph) {
+    removeOne(subgraph);
+    calculateState();
+  }
+
+  private boolean correctWorld(SubGraph subgraph) {
+    return this.world == subgraph.getWorld();
+  }
+
+  public World getWorld() {
+    return world;
+  }
+
+  public IntegerXZ getOriginXZ() {
+    return chunkOrigin;
   }
 
   /**
@@ -233,8 +276,108 @@ public class SuperGraph extends ForwardingMutableNetwork<Vertex, Edge> {
     }
   }
 
+  private void cloneGraphData(SubGraph subgraph) {
+    // Beware data already existing (from after prior removal)
+    for (Vertex node : subgraph.nodes()) {
+      this.addNode(node);
+    }
+    for (Edge edge : subgraph.edges()) {
+      EndpointPair<Vertex> endpointPair = subgraph.incidentNodes(edge);
+      this.addEdge(endpointPair.nodeU(), endpointPair.nodeV(), edge);
+    }
+  }
+
+  public Block[] getIntegrityViolations() {
+    List<Vertex> offending = this.state.offendingNodes;
+    // Translate vertices to Blocks w/ Locations
+    return offending.stream()
+        .map(v -> v.getBlockXYZ())
+        .filter(o -> o.isPresent())
+        .map(
+            o -> {
+              IntegerXYZ xyz = o.get();
+              // TODO: send BlockData instead to verify the block being broken
+              return this.world.getBlockAt(xyz.x, xyz.y, xyz.z);
+            })
+        .toArray(Block[]::new);
+  }
+
+  private GraphState calculateState() {
+    GraphState result = new GraphState();
+    // Call to graph.nodes() preserves order
+    for (SubGraph subgraph : getSubgraphGrid().values()) {
+      for (Vertex v : subgraph.nodes()) {
+        if (dists.getOrDefault(v, -1) == -1) continue;
+        Optional<IntegerXYZ> xyzOpt = v.getBlockXYZ();
+        // Only block-like vertices are relevant
+        if (xyzOpt.isPresent()) {
+          // Mark if the current group of offending blocks relies on another chunk
+          IntegerXYZ xyz = xyzOpt.get();
+          int x = xyz.x;
+          int z = xyz.z;
+          boolean isOffending = false;
+          Edge e = subgraph.edgeConnectingOrNull(subgraph.src, v);
+          if (e.cap > 0) {
+            isOffending = true;
+          }
+          if (x % 16 == 0) { // WEST
+            Edge e2 = subgraph.edgeConnectingOrNull(subgraph.west_src, v);
+            if (e.cap > 0 || e2.cap > 0) {
+              isOffending = true;
+              result.dependantChunks.add(new IntegerXZ(Math.floorDiv(x - 1, 16), Math.floorDiv(z, 16)));
+            }
+          }
+          if ((x + 1) % 16 == 0) { // EAST
+            Edge e2 = subgraph.edgeConnectingOrNull(subgraph.east_src, v);
+            if (e.cap > 0 || e2.cap > 0) {
+              isOffending = true;
+              result.dependantChunks.add(new IntegerXZ(Math.floorDiv(x + 1, 16), Math.floorDiv(z, 16)));
+            }
+          }
+          if (z % 16 == 0) { // NORTH
+            Edge e2 = subgraph.edgeConnectingOrNull(subgraph.north_src, v);
+            if (e.cap > 0 || e2.cap > 0) {
+              isOffending = true;
+              result.dependantChunks.add(new IntegerXZ(Math.floorDiv(x, 16), Math.floorDiv(z - 1, 16)));
+            }
+          }
+          if ((z + 1) % 16 == 0) { // SOUTH
+            Edge e2 = subgraph.edgeConnectingOrNull(subgraph.south_src, v);
+            if (e.cap > 0 || e2.cap > 0) {
+              isOffending = true;
+              result.dependantChunks.add(new IntegerXZ(Math.floorDiv(x, 16), Math.floorDiv(z + 1, 16)));
+            }
+          }
+          if (isOffending) {
+            result.offendingNodes.add(v);
+          }
+        }
+      }
+    }
+    this.state = result;
+    return this.state;
+  }
+
+  public GraphState getState() {
+    if (this.state == null) this.state = new GraphState();
+    return this.state;
+  }
+
+  public Table<Integer, Integer, SubGraph> getSubgraphGrid() {
+    return subgraphGrid;
+  }
+
+  public int getIteration() {
+    return iteration;
+  }
+
   @Override
   protected MutableNetwork<Vertex, Edge> delegate() {
-    return superGraph;
+    return network;
+  }
+
+  @Override
+  public String toString() {
+    return String.format("SuperGraph(origin:%s, iter:%s)", chunkOrigin.toString(), iteration);
   }
 }

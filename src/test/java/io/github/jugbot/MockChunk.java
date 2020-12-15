@@ -48,7 +48,7 @@ public class MockChunk implements Chunk {
 
   @Override
   public World getWorld() {
-    throw new NotImplementedException();
+    return MockWorld.Instance();
   }
 
   @Override
