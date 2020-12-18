@@ -7,12 +7,12 @@ import org.junit.jupiter.api.Test;
 public class IntegrityDataTest {
   @Test
   void opposite() {
-    assertTrue(IntegrityData.NORTH.opposite() == IntegrityData.SOUTH);
-    assertTrue(IntegrityData.UP.opposite() == IntegrityData.DOWN);
-    assertTrue(IntegrityData.EAST.opposite() == IntegrityData.WEST);
-    assertTrue(IntegrityData.SOUTH.opposite() == IntegrityData.NORTH);
-    assertTrue(IntegrityData.DOWN.opposite() == IntegrityData.UP);
-    assertTrue(IntegrityData.WEST.opposite() == IntegrityData.EAST);
-    assertTrue(IntegrityData.MASS.opposite() == null);
+    assertTrue(Integrity.NORTH.opposite() == Integrity.SOUTH);
+    assertTrue(Integrity.UP.opposite() == Integrity.DOWN);
+    assertTrue(Integrity.EAST.opposite() == Integrity.WEST);
+    assertTrue(Integrity.SOUTH.opposite() == Integrity.NORTH);
+    assertTrue(Integrity.DOWN.opposite() == Integrity.UP);
+    assertTrue(Integrity.WEST.opposite() == Integrity.EAST);
+    assertTrue(Integrity.MASS.opposite() == null);
   }
 }

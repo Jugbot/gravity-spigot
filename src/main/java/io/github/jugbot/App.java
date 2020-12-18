@@ -8,9 +8,12 @@ import java.util.logging.Level;
 import java.util.logging.SimpleFormatter;
 
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
+import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.java.JavaPluginLoader;
 
 import io.github.jugbot.commands.GravityCommand;
+import io.github.jugbot.graph.SubGraphIO;
 
 /** Hello world! */
 public class App extends JavaPlugin {
@@ -45,15 +48,16 @@ public class App extends JavaPlugin {
       e.printStackTrace();
     }
     /** INIT */
-    ConfigurationSerialization.registerClass(BlockData.class);
+    ConfigurationSerialization.registerClass(IntegrityData.class);
     Config.Instance();
     ChunkProcessor.Instance();
-    IntegrityChunkStorage.Instance();
+    SubGraphIO.Instance();
     /** REGISTER */
     getServer().getPluginManager().registerEvents(new ChunkListener(), this);
     getServer().getPluginManager().registerEvents(new BlockEventListeners(), this);
     getServer().getPluginManager().registerEvents(new BlockGravityListener(), this);
     getServer().getPluginManager().registerEvents(new BlockChangeListener(), this);
+
     getCommand("gr").setExecutor(new GravityCommand());
     // ProtocolManager manager = ProtocolLibrary.getProtocolManager();
     // manager.addPacketListener(new BlockChanger());
@@ -63,5 +67,16 @@ public class App extends JavaPlugin {
   @Override
   public void onDisable() {
     getLogger().info("Gravity shutting down...");
+  }
+
+  // Craftbukkit Mock constructors
+  public App() {
+    super();
+    instance = this;
+  }
+
+  protected App(JavaPluginLoader loader, PluginDescriptionFile description, File dataFolder, File file) {
+    super(loader, description, dataFolder, file);
+    instance = this;
   }
 }
