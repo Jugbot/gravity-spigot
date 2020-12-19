@@ -178,8 +178,8 @@ public class ChunkProcessor {
             if (group.getIteration() >= MAX_GROUP_ITERATIONS
                 || state.dependantChunks.stream()
                     .allMatch(chunkCoord -> group.getSubgraphGrid().contains(chunkCoord.x, chunkCoord.z))) {
-              Block[] blocks = group.getIntegrityViolations();
-              Bukkit.getPluginManager().callEvent(new BlockGravityEvent(blocks));
+              List<Block> blocks = group.getIntegrityViolations();
+              Bukkit.getPluginManager().callEvent(new BlocksGravityEvent(blocks));
               group.getSubgraphGrid().values().forEach((subgraph) -> inProgressGroup.remove(subgraph.getChunk()));
               group.removeAll();
             } else {
@@ -226,9 +226,9 @@ public class ChunkProcessor {
           (SubGraph integrityChunk) -> {
             if (integrityChunk.getState().dependantChunks.isEmpty()) {
               // Call gravity event on blocks in chunk
-              Block[] blocks = integrityChunk.getIntegrityViolations();
-              Bukkit.getPluginManager().callEvent(new BlockGravityEvent(blocks));
-              App.Instance().getLogger().fine("Blocks to fall: " + blocks.length);
+              List<Block> blocks = integrityChunk.getIntegrityViolations();
+              Bukkit.getPluginManager().callEvent(new BlocksGravityEvent(blocks));
+              App.Instance().getLogger().fine("Blocks to fall: " + blocks.size());
             } else {
               App.Instance().getLogger().fine("Adding chunk to cross-queue");
               chunkDependencyQueue.add(chunk);

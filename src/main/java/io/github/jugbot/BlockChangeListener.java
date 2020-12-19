@@ -9,6 +9,7 @@ public class BlockChangeListener implements Listener {
   @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
   void onBlockChange(BlockChangeEvent event) {
     App.Instance().getLogger().fine("Block Gravity");
-    ChunkProcessor.Instance().queueChunkUpdate(event.getBlock().getChunk());
+    // ChunkProcessor.Instance().queueChunkUpdate(event.getBlock().getChunk());
+    BlockProcessor.Instance().queueBlockUpdate(event.getBlock());
   }
 }

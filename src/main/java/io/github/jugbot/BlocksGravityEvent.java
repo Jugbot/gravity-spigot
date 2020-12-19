@@ -6,13 +6,13 @@ import org.bukkit.block.Block;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-public class BlockGravityEvent extends Event {
+public class BlocksGravityEvent extends Event {
   private static final HandlerList handlers = new HandlerList();
-  private final Block block;
+  private final Collection<Block> blocks;
 
-  public BlockGravityEvent(@Nonnull Block block) {
+  public BlocksGravityEvent(@Nonnull Collection<Block> blocks) {
     super();
-    this.block = block;
+    this.blocks = blocks;
   }
 
   @Override
@@ -27,7 +27,7 @@ public class BlockGravityEvent extends Event {
   }
 
   @Nonnull
-  public final Block getBlocks() {
-    return block;
+  public final Collection<Block> getBlocks() {
+    return blocks;
   }
 }

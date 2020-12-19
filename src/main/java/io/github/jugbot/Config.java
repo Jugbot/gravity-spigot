@@ -134,4 +134,8 @@ public class Config {
   public boolean isStructural(Material material) {
     return material.isSolid();
   }
+
+  public int getMaximumUpdates() {
+    return 8;
+  }
 }

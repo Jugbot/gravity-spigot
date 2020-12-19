@@ -287,7 +287,7 @@ public class SuperGraph extends ForwardingMutableNetwork<Vertex, Edge> {
     }
   }
 
-  public Block[] getIntegrityViolations() {
+  public List<Block> getIntegrityViolations() {
     List<Vertex> offending = this.state.offendingNodes;
     // Translate vertices to Blocks w/ Locations
     return offending.stream()
@@ -299,7 +299,7 @@ public class SuperGraph extends ForwardingMutableNetwork<Vertex, Edge> {
               // TODO: send BlockData instead to verify the block being broken
               return this.world.getBlockAt(xyz.x, xyz.y, xyz.z);
             })
-        .toArray(Block[]::new);
+        .collect(Collectors.toList());
   }
 
   private GraphState calculateState() {

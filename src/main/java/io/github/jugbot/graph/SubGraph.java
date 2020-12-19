@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import com.google.common.graph.ElementOrder;
 import com.google.common.graph.EndpointPair;
@@ -219,7 +221,7 @@ public class SubGraph extends ForwardingMutableNetwork<Vertex, Edge> {
   }
 
   /** Called Asynchronously */
-  public Block[] getIntegrityViolations() {
+  public List<Block> getIntegrityViolations() {
     List<Vertex> offending = this.state.offendingNodes;
     // Translate vertices to Blocks w/ Locations
     return offending.stream()
@@ -231,7 +233,7 @@ public class SubGraph extends ForwardingMutableNetwork<Vertex, Edge> {
               // TODO: send BlockData instead to verify the block being broken
               return this.chunk.getBlock(xyz.x & 0xF, xyz.y & 0xFF, xyz.z & 0xF);
             })
-        .toArray(Block[]::new);
+        .collect(Collectors.toList());
   }
 
   public GraphState calculateState() {

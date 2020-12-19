@@ -1,0 +1,139 @@
+package io.github.jugbot;
+
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.PriorityQueue;
+import java.util.Set;
+
+import com.google.common.collect.Sets;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+
+import io.github.jugbot.util.AsyncBukkit;
+
+/**
+ * Takes block changes and outputs offending blocks that should fall asynchronously. Note reported blocks may be in
+ * other chunks.
+ */
+public class BlockProcessor {
+  private static BlockProcessor instance;
+  private LinkedHashSet<Block> blockUpdateQueue = new LinkedHashSet<>();
+  private PriorityQueue<Block> destructionQueue =
+      new PriorityQueue<>(
+          8,
+          new Comparator<Block>() {
+            @Override
+            public int compare(Block b1, Block b2) {
+              return b1.getY() - b2.getY();
+            }
+          });
+
+  public static BlockProcessor Instance() {
+    if (instance == null) {
+      instance = new BlockProcessor();
+    }
+    return instance;
+  }
+
+  /** Fires block processing every tick. */
+  private BlockProcessor() {
+    Bukkit.getScheduler()
+        .scheduleSyncRepeatingTask(
+            App.Instance(),
+            new Runnable() {
+              @Override
+              public void run() {
+                BlockProcessor.Instance().processBlocks();
+              }
+            },
+            0,
+            1);
+  }
+
+  private void processBlocks() {
+    // Prepare blocks to check
+    Set<Block> toUpdate = Sets.newHashSet(blockUpdateQueue);
+    blockUpdateQueue.clear();
+    for (Block block : Sets.newHashSet(toUpdate)) {
+      if (!block.getType().isSolid()) {
+        if (block.getY() < 255) {
+          toUpdate.add(block.getRelative(BlockFace.UP));
+        }
+        toUpdate.add(block.getRelative(BlockFace.NORTH));
+        toUpdate.add(block.getRelative(BlockFace.EAST));
+        toUpdate.add(block.getRelative(BlockFace.SOUTH));
+        toUpdate.add(block.getRelative(BlockFace.WEST));
+        if (block.getY() > 0) {
+          toUpdate.add(block.getRelative(BlockFace.DOWN));
+        }
+        toUpdate.remove(block);
+      }
+    }
+    // Check blocks
+    AsyncBukkit.doTask(
+        () -> {
+          return blocksDisconnectedFromBedrock(toUpdate);
+        },
+        (Set<Block> blocks) -> {
+          destructionQueue.addAll(blocks);
+        });
+    // Send blocks to be destroyed
+    for (int i = 0; i < Config.Instance().getMaximumUpdates() && !destructionQueue.isEmpty(); i++) {
+      Bukkit.getPluginManager().callEvent(new BlockGravityEvent(destructionQueue.remove()));
+    }
+  }
+
+  private Set<Block> blocksDisconnectedFromBedrock(Collection<Block> starts) {
+    Set<Block> connected = new HashSet<>();
+    Set<Block> disconnected = new HashSet<>();
+    for (Block start : starts) {
+      Set<Block> visited = new HashSet<>();
+      Deque<Block> stack = new LinkedList<Block>();
+      stack.add(start);
+      boolean isConnected = false;
+      while (!stack.isEmpty()) {
+        Block candidate = stack.removeLast();
+        if (visited.contains(candidate) || !candidate.getType().isSolid()) {
+          continue;
+        }
+        if (disconnected.contains(candidate)) {
+          isConnected = false;
+          break;
+        }
+        if (candidate.getType() == Material.BEDROCK || connected.contains(candidate)) {
+          isConnected = true;
+          break;
+        }
+        visited.add(candidate);
+        // Add decendants
+        if (candidate.getY() < 255) {
+          stack.add(candidate.getRelative(BlockFace.UP));
+        }
+        stack.add(candidate.getRelative(BlockFace.NORTH));
+        stack.add(candidate.getRelative(BlockFace.EAST));
+        stack.add(candidate.getRelative(BlockFace.SOUTH));
+        stack.add(candidate.getRelative(BlockFace.WEST));
+        if (candidate.getY() > 0) {
+          stack.add(candidate.getRelative(BlockFace.DOWN));
+        }
+      }
+      if (isConnected) {
+        connected.addAll(visited);
+      } else {
+        disconnected.addAll(visited);
+      }
+    }
+    return disconnected;
+  }
+
+  public void queueBlockUpdate(Block block) {
+    blockUpdateQueue.add(block);
+  }
+}

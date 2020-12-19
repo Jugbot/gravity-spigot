@@ -13,7 +13,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.java.JavaPluginLoader;
 
 import io.github.jugbot.commands.GravityCommand;
-import io.github.jugbot.graph.SubGraphIO;
 
 /** Hello world! */
 public class App extends JavaPlugin {
@@ -50,8 +49,6 @@ public class App extends JavaPlugin {
     /** INIT */
     ConfigurationSerialization.registerClass(IntegrityData.class);
     Config.Instance();
-    ChunkProcessor.Instance();
-    SubGraphIO.Instance();
     /** REGISTER */
     getServer().getPluginManager().registerEvents(new ChunkListener(), this);
     getServer().getPluginManager().registerEvents(new BlockEventListeners(), this);
