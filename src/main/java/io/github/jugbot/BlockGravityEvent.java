@@ -1,6 +1,5 @@
 package io.github.jugbot;
 
-import java.util.Collection;
 import javax.annotation.Nonnull;
 import org.bukkit.block.Block;
 import org.bukkit.event.Event;

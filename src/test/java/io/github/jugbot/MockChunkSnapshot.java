@@ -4,7 +4,6 @@ import org.apache.commons.lang.NotImplementedException;
 import org.bukkit.ChunkSnapshot;
 import org.bukkit.Material;
 import org.bukkit.block.Biome;
-import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 
 public class MockChunkSnapshot implements ChunkSnapshot {

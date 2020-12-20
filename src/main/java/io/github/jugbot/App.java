@@ -7,7 +7,6 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.SimpleFormatter;
 
-import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.java.JavaPluginLoader;
@@ -47,10 +46,8 @@ public class App extends JavaPlugin {
       e.printStackTrace();
     }
     /** INIT */
-    ConfigurationSerialization.registerClass(IntegrityData.class);
     Config.Instance();
     /** REGISTER */
-    getServer().getPluginManager().registerEvents(new ChunkListener(), this);
     getServer().getPluginManager().registerEvents(new BlockEventListeners(), this);
     getServer().getPluginManager().registerEvents(new BlockGravityListener(), this);
     getServer().getPluginManager().registerEvents(new BlockChangeListener(), this);

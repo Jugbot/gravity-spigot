@@ -10,7 +10,6 @@ import java.util.function.Predicate;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
-import com.google.common.collect.Tables;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.bukkit.BlockChangeDelegate;

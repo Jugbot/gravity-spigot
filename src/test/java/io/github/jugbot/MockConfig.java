@@ -5,13 +5,4 @@ public class MockConfig extends Config {
     if (Config.instance == null) Config.instance = new MockConfig();
     return Config.Instance();
   }
-
-  private MockConfig() {
-    super.blockData = new IntegrityData();
-  }
-
-  @Override
-  protected void loadBlockData() {
-    return;
-  }
 }

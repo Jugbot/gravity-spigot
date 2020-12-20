@@ -6,17 +6,16 @@ import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
-import java.util.PriorityQueue;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 
 import io.github.jugbot.util.AsyncBukkit;
+import io.github.jugbot.util.PriorityQueueSet;
 
 /**
  * Takes block changes and outputs offending blocks that should fall asynchronously. Note reported blocks may be in
@@ -25,9 +24,8 @@ import io.github.jugbot.util.AsyncBukkit;
 public class BlockProcessor {
   private static BlockProcessor instance;
   private LinkedHashSet<Block> blockUpdateQueue = new LinkedHashSet<>();
-  private PriorityQueue<Block> destructionQueue =
-      new PriorityQueue<>(
-          8,
+  private PriorityQueueSet<Block> destructionQueue =
+      new PriorityQueueSet<Block>(
           new Comparator<Block>() {
             @Override
             public int compare(Block b1, Block b2) {
@@ -61,21 +59,6 @@ public class BlockProcessor {
     // Prepare blocks to check
     Set<Block> toUpdate = Sets.newHashSet(blockUpdateQueue);
     blockUpdateQueue.clear();
-    for (Block block : Sets.newHashSet(toUpdate)) {
-      if (!block.getType().isSolid()) {
-        if (block.getY() < 255) {
-          toUpdate.add(block.getRelative(BlockFace.UP));
-        }
-        toUpdate.add(block.getRelative(BlockFace.NORTH));
-        toUpdate.add(block.getRelative(BlockFace.EAST));
-        toUpdate.add(block.getRelative(BlockFace.SOUTH));
-        toUpdate.add(block.getRelative(BlockFace.WEST));
-        if (block.getY() > 0) {
-          toUpdate.add(block.getRelative(BlockFace.DOWN));
-        }
-        toUpdate.remove(block);
-      }
-    }
     // Check blocks
     AsyncBukkit.doTask(
         () -> {
@@ -85,7 +68,7 @@ public class BlockProcessor {
           destructionQueue.addAll(blocks);
         });
     // Send blocks to be destroyed
-    for (int i = 0; i < Config.Instance().getMaximumUpdates() && !destructionQueue.isEmpty(); i++) {
+    for (int i = 0; i < Config.Instance().getDestructionPerTick() && !destructionQueue.isEmpty(); i++) {
       Bukkit.getPluginManager().callEvent(new BlockGravityEvent(destructionQueue.remove()));
     }
   }
@@ -98,6 +81,7 @@ public class BlockProcessor {
       Deque<Block> stack = new LinkedList<Block>();
       stack.add(start);
       boolean isConnected = false;
+      // Depth-first traversal downwards
       while (!stack.isEmpty()) {
         Block candidate = stack.removeLast();
         if (visited.contains(candidate) || !candidate.getType().isSolid()) {
@@ -107,12 +91,12 @@ public class BlockProcessor {
           isConnected = false;
           break;
         }
-        if (candidate.getType() == Material.BEDROCK || connected.contains(candidate)) {
+        if (Config.Instance().isRootBlock(candidate) || connected.contains(candidate)) {
           isConnected = true;
           break;
         }
         visited.add(candidate);
-        // Add decendants
+        // Add decendants (order matters)
         if (candidate.getY() < 255) {
           stack.add(candidate.getRelative(BlockFace.UP));
         }
@@ -134,6 +118,21 @@ public class BlockProcessor {
   }
 
   public void queueBlockUpdate(Block block) {
-    blockUpdateQueue.add(block);
+    if (block.getType().isSolid()) {
+      // Block Added
+      blockUpdateQueue.add(block);
+    } else {
+      // Block Removed
+      if (block.getY() < 255) {
+        blockUpdateQueue.add(block.getRelative(BlockFace.UP));
+      }
+      if (block.getY() > 0) {
+        blockUpdateQueue.add(block.getRelative(BlockFace.DOWN));
+      }
+      blockUpdateQueue.add(block.getRelative(BlockFace.NORTH));
+      blockUpdateQueue.add(block.getRelative(BlockFace.EAST));
+      blockUpdateQueue.add(block.getRelative(BlockFace.SOUTH));
+      blockUpdateQueue.add(block.getRelative(BlockFace.WEST));
+    }
   }
 }
