@@ -1,4 +1,4 @@
-package io.github.jugbot;
+package io.github.jugbot.events;
 
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
@@ -18,6 +18,8 @@ import org.bukkit.event.block.BlockSpreadEvent;
 import org.bukkit.event.block.EntityBlockFormEvent;
 import org.bukkit.event.block.LeavesDecayEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+
+import io.github.jugbot.App;
 
 public class BlockEventListeners implements Listener {
 

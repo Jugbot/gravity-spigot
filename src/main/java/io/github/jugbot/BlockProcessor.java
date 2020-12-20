@@ -14,6 +14,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 
+import io.github.jugbot.events.BlockGravityEvent;
 import io.github.jugbot.util.AsyncBukkit;
 import io.github.jugbot.util.PriorityQueueSet;
 

@@ -1,4 +1,4 @@
-package io.github.jugbot;
+package io.github.jugbot.events;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;

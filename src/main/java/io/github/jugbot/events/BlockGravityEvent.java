@@ -1,16 +1,17 @@
-package io.github.jugbot;
+package io.github.jugbot.events;
 
 import javax.annotation.Nonnull;
-
 import org.bukkit.block.Block;
+import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
-import org.bukkit.event.block.BlockEvent;
 
-public class BlockChangeEvent extends BlockEvent {
+public class BlockGravityEvent extends Event {
   private static final HandlerList handlers = new HandlerList();
+  private final Block block;
 
-  public BlockChangeEvent(@Nonnull Block block) {
-    super(block);
+  public BlockGravityEvent(@Nonnull Block block) {
+    super();
+    this.block = block;
   }
 
   @Override
@@ -22,5 +23,10 @@ public class BlockChangeEvent extends BlockEvent {
   @Nonnull
   public static HandlerList getHandlerList() {
     return handlers;
+  }
+
+  @Nonnull
+  public final Block getBlocks() {
+    return block;
   }
 }

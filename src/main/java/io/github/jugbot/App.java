@@ -12,6 +12,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.java.JavaPluginLoader;
 
 import io.github.jugbot.commands.GravityCommand;
+import io.github.jugbot.events.BlockChangeListener;
+import io.github.jugbot.events.BlockEventListeners;
+import io.github.jugbot.events.BlockGravityListener;
 
 /** Hello world! */
 public class App extends JavaPlugin {

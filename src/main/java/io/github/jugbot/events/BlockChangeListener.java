@@ -1,8 +1,11 @@
-package io.github.jugbot;
+package io.github.jugbot.events;
 
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+
+import io.github.jugbot.App;
+import io.github.jugbot.BlockProcessor;
 
 public class BlockChangeListener implements Listener {
 
