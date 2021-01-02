@@ -1,10 +1,10 @@
 package io.github.jugbot;
 
+import io.github.jugbot.hooks.Hooks;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 
@@ -37,5 +37,9 @@ public class Config {
 
   public boolean isRootBlock(Block candidate) {
     return Config.Data.rootBlocks.contains(candidate.getType());
+  }
+
+  public boolean blockCanFall(Block candidate) {
+    return Hooks.Instance().canDestroyBlock(candidate);
   }
 }

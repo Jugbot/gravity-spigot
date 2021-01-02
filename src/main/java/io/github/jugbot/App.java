@@ -1,20 +1,19 @@
 package io.github.jugbot;
 
+import io.github.jugbot.commands.GravityCommand;
+import io.github.jugbot.events.BlockChangeListener;
+import io.github.jugbot.events.BlockEventListeners;
+import io.github.jugbot.events.BlockGravityListener;
+import io.github.jugbot.hooks.Hooks;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.SimpleFormatter;
-
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.java.JavaPluginLoader;
-
-import io.github.jugbot.commands.GravityCommand;
-import io.github.jugbot.events.BlockChangeListener;
-import io.github.jugbot.events.BlockEventListeners;
-import io.github.jugbot.events.BlockGravityListener;
 
 /** Hello world! */
 public class App extends JavaPlugin {
@@ -25,6 +24,11 @@ public class App extends JavaPlugin {
       instance = App.getPlugin(App.class);
     }
     return instance;
+  }
+
+  @Override
+  public void onLoad() {
+    Hooks.Instance();
   }
 
   @Override

@@ -17,7 +17,10 @@
   </properties>
 
   <repositories>
-    <!--  -->
+    <repository>
+        <id>sk89q-repo</id>
+        <url>http://maven.sk89q.com/repo/</url>
+    </repository>
   </repositories>
 
   <dependencies>
@@ -33,6 +36,13 @@
       <groupId>org.mockito</groupId>
       <artifactId>mockito-junit-jupiter</artifactId>
       <version>3.6.28</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.sk89q.worldguard</groupId>
+      <artifactId>worldguard-bukkit</artifactId>
+      <version>7.0.4</version>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
