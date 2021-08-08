@@ -1,0 +1,10 @@
+{
+  "maven.excludedFolders": [
+    "server/BuildTools",
+    "**/.*",
+    "**/node_modules",
+    "**/target",
+    "**/bin"
+  ],
+  "java.configuration.updateBuildConfiguration": "automatic"
+}

@@ -1,0 +1,4 @@
+name: ${project.artifactId}
+version: ${project.version}
+api-version: ${spigot.api}
+main: ${project.groupId}.App
